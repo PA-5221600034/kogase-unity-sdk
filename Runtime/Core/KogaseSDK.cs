@@ -1,195 +1,64 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using Kogase.Core;
 using UnityEngine;
-using UnityEngine.Networking;
-using System.Threading.Tasks;
 
 namespace Kogase
 {
     public class KogaseSDK
     {
-        static KogaseSDK instance;
+        static KogaseSDK _instance;
         public static KogaseSDK Instance
         {
-            get
+            get { return _instance ??= new KogaseSDK(); }
+        }
+
+        KogaseConfig config;
+        Queue<Dictionary<string, object>> eventQueue;
+
+        KogaseSDK()
+        {
+            // Try to load from Resources
+            TextAsset configAsset = Resources.Load<TextAsset>("Kogase/kogaseconfig");
+            if (configAsset != null)
             {
-                if (instance == null)
+                try
                 {
-                    instance = new KogaseSDK();
+                    config = JsonUtility.FromJson<KogaseConfig>(configAsset.text);
+                    Debug.Log($"Kogase config loaded from {Path.Combine("Assets/Resources/Kogase", "kogaseconfig.json")}");
                 }
-                return instance;
-            }
-        }
-
-        private string _apiUrl;
-        private string _apiKey;
-        private string _deviceId;
-        private Queue<Dictionary<string, object>> _eventQueue;
-        private bool _isInitialized;
-        private const int MAX_QUEUE_SIZE = 100;
-        private const float AUTO_FLUSH_INTERVAL = 60f; // Seconds
-        private float _lastFlushTime;
-
-        public static KogaseSDK Instance
-        {
-            get
-            {
-                if (_instance == null)
+                catch (Exception ex)
                 {
-                    _instance = new KogaseSDK();
+                    Debug.LogError($"Failed to parse Kogase config: {ex.Message}");
                 }
-                return _instance;
             }
-        }
-
-        private KogaseSDK()
-        {
-            _eventQueue = new Queue<Dictionary<string, object>>();
-            _isInitialized = false;
-        }
-
-        public void Initialize(string apiUrl, string apiKey)
-        {
-            _apiUrl = apiUrl.TrimEnd('/');
-            _apiKey = apiKey;
-            _deviceId = SystemInfo.deviceUniqueIdentifier;
-            _isInitialized = true;
             
-            Debug.Log($"Kogase SDK initialized with API URL: {_apiUrl}");
+            // If still null, create a new config
+            if (config == null)
+            {
+                config = new KogaseConfig();
+                string configFilePath = Path.Combine("Assets/Resources/Kogase", "kogaseconfig.json");
+                string json = JsonUtility.ToJson(config, true);
+                
+                // Create directory if it doesn't exist
+                string directory = Path.GetDirectoryName(configFilePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory!);
+                }
+                
+                // Write to file
+                File.WriteAllText(configFilePath, json);
+                Debug.Log($"New Kogase config written to {configFilePath}");
+            }
             
-            // Record installation event
-            RecordInstallation();
+            eventQueue = new Queue<Dictionary<string, object>>();
         }
 
-        private void CheckInitialization()
+        public void UpdateConfig(KogaseConfig newConfig)
         {
-            if (!_isInitialized)
-            {
-                throw new InvalidOperationException("Kogase SDK is not initialized. Call Initialize() first.");
-            }
-        }
-
-        public void RecordEvent(string eventName, Dictionary<string, object> parameters = null)
-        {
-            CheckInitialization();
-
-            var eventData = new Dictionary<string, object>
-            {
-                { "event_name", eventName },
-                { "timestamp", DateTime.UtcNow.ToString("o") },
-                { "device_id", _deviceId },
-                { "platform", Application.platform.ToString() },
-                { "os_version", SystemInfo.operatingSystem },
-                { "sdk_version", "1.0.0" }
-            };
-
-            if (parameters != null)
-            {
-                foreach (var param in parameters)
-                {
-                    eventData[$"params_{param.Key}"] = param.Value;
-                }
-            }
-
-            _eventQueue.Enqueue(eventData);
-
-            if (_eventQueue.Count >= MAX_QUEUE_SIZE)
-            {
-                FlushEvents();
-            }
-        }
-
-        private void RecordInstallation()
-        {
-            var installParams = new Dictionary<string, object>
-            {
-                { "app_version", Application.version },
-                { "device_model", SystemInfo.deviceModel },
-                { "device_type", SystemInfo.deviceType.ToString() },
-                { "processor_type", SystemInfo.processorType },
-                { "system_memory_size", SystemInfo.systemMemorySize },
-                { "graphics_device_name", SystemInfo.graphicsDeviceName },
-                { "graphics_memory_size", SystemInfo.graphicsMemorySize }
-            };
-
-            RecordEvent("app_install", installParams);
-        }
-
-        public async void FlushEvents()
-        {
-            CheckInitialization();
-
-            if (_eventQueue.Count == 0)
-            {
-                return;
-            }
-
-            var events = new List<Dictionary<string, object>>();
-            while (_eventQueue.Count > 0)
-            {
-                events.Add(_eventQueue.Dequeue());
-            }
-
-            var json = JsonUtility.ToJson(new { events = events });
-            var request = new UnityWebRequest($"{_apiUrl}/api/v1/events", "POST");
-            
-            byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("X-API-Key", _apiKey);
-
-            try
-            {
-                var operation = request.SendWebRequest();
-                while (!operation.isDone)
-                {
-                    await Task.Yield();
-                }
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    Debug.Log($"Successfully sent {events.Count} events to Kogase server");
-                }
-                else
-                {
-                    Debug.LogError($"Failed to send events to Kogase server: {request.error}");
-                    // Re-queue failed events
-                    foreach (var evt in events)
-                    {
-                        _eventQueue.Enqueue(evt);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Exception while sending events to Kogase server: {ex.Message}");
-                // Re-queue failed events
-                foreach (var evt in events)
-                {
-                    _eventQueue.Enqueue(evt);
-                }
-            }
-            finally
-            {
-                request.Dispose();
-            }
-        }
-
-        public void Update()
-        {
-            if (!_isInitialized)
-            {
-                return;
-            }
-
-            float currentTime = Time.realtimeSinceStartup;
-            if (currentTime - _lastFlushTime >= AUTO_FLUSH_INTERVAL)
-            {
-                FlushEvents();
-                _lastFlushTime = currentTime;
-            }
+            config = newConfig;
         }
     }
 } 

@@ -10,7 +10,7 @@ namespace Kogase.Core.Http
     /// </summary>
     public class HttpClient
     {
-        private MonoBehaviour coroutineRunner;
+        MonoBehaviour coroutineRunner;
 
         /// <summary>
         /// Creates a new HTTP client
@@ -47,7 +47,7 @@ namespace Kogase.Core.Http
 
             var response = new HttpResponse
             {
-                IsSuccess = !webRequest.isNetworkError && !webRequest.isHttpError,
+                IsSuccess = webRequest.result != UnityWebRequest.Result.ConnectionError && webRequest.result != UnityWebRequest.Result.ProtocolError,
                 StatusCode = (int)webRequest.responseCode,
                 Content = webRequest.downloadHandler?.text,
                 Error = webRequest.error,
@@ -79,7 +79,7 @@ namespace Kogase.Core.Http
             coroutineRunner.StartCoroutine(SendCoroutine(request, callback));
         }
 
-        private IEnumerator SendCoroutine(IHttpRequest request, Action<HttpResponse> callback)
+        IEnumerator SendCoroutine(IHttpRequest request, Action<HttpResponse> callback)
         {
             UnityWebRequest webRequest = request.CreateWebRequest();
 
@@ -87,7 +87,7 @@ namespace Kogase.Core.Http
 
             var response = new HttpResponse
             {
-                IsSuccess = !webRequest.isNetworkError && !webRequest.isHttpError,
+                IsSuccess = webRequest.result != UnityWebRequest.Result.ConnectionError && webRequest.result != UnityWebRequest.Result.ProtocolError,
                 StatusCode = (int)webRequest.responseCode,
                 Content = webRequest.downloadHandler?.text,
                 Error = webRequest.error,

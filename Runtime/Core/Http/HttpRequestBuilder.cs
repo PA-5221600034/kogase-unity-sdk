@@ -11,17 +11,17 @@ namespace Kogase.Core.Http
     /// </summary>
     public class HttpRequestBuilder
     {
-        private HttpMethod method;
-        private string baseUrl;
-        private string path;
-        private Dictionary<string, string> queryParams;
-        private Dictionary<string, string> pathParams;
-        private Dictionary<string, string> headers;
-        private string body;
-        private byte[] bodyBytes;
-        private List<IMultipartFormSection> formData;
-        private bool useFormData;
-        private FileStream fileStream;
+        HttpMethod method;
+        string baseUrl;
+        string path;
+        Dictionary<string, string> queryParams;
+        Dictionary<string, string> pathParams;
+        Dictionary<string, string> headers;
+        string body;
+        byte[] bodyBytes;
+        List<IMultipartFormSection> formData;
+        bool useFormData;
+        FileStream fileStream;
 
         /// <summary>
         /// Creates a new HttpRequestBuilder with GET method
@@ -63,7 +63,7 @@ namespace Kogase.Core.Http
             return new HttpRequestBuilder(HttpMethod.Patch, url);
         }
 
-        private HttpRequestBuilder(HttpMethod method, string url)
+        HttpRequestBuilder(HttpMethod method, string url)
         {
             this.method = method;
             
@@ -362,7 +362,7 @@ namespace Kogase.Core.Http
             return request;
         }
 
-        private string ProcessPathParams(string inputPath, Dictionary<string, string> pathParams)
+        string ProcessPathParams(string inputPath, Dictionary<string, string> pathParams)
         {
             if (pathParams == null || pathParams.Count == 0)
             {
@@ -381,7 +381,7 @@ namespace Kogase.Core.Http
             return processedPath;
         }
 
-        private string AppendQueryParams(string url, Dictionary<string, string> queryParams)
+        string AppendQueryParams(string url, Dictionary<string, string> queryParams)
         {
             if (queryParams == null || queryParams.Count == 0)
             {

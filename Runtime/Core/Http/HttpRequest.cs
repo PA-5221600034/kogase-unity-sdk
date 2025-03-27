@@ -88,7 +88,7 @@ namespace Kogase.Core.Http
                         webRequest = UnityWebRequest.Put(Url, new byte[0]);
                         break;
                     case HttpMethod.Post:
-                        webRequest = UnityWebRequest.Post(Url, "");
+                        webRequest = UnityWebRequest.PostWwwForm(Url, "");
                         break;
                     case HttpMethod.Patch:
                         webRequest = new UnityWebRequest(Url, "PATCH");
