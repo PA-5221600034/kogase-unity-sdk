@@ -1,7 +1,6 @@
 using System;
 using UnityEngine.Serialization;
-
-namespace Kogase.Core
+namespace Kogase.Models
 {
     /// <summary>
     /// Configuration for the Kogase SDK

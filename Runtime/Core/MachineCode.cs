@@ -1,37 +1,11 @@
-using Komutil.JsonPlayerPrefs;
 using System;
 using System.Security.Cryptography;
-using UnityEngine;
-namespace Kogase.Utils
+using UnityEngine.Device;
+namespace Kogase.Core
 {
-    /// <summary>
-    /// Secure machine code generator with platform-specific optimizations
-    /// </summary>
     public static class MachineCode
     {
-        const string KMachineCode = "kogase_machine_code";
         const int KDeviceUniqueIdentifierMaxLength = 8;
-        
-        /// <summary>
-        /// Gets or creates a persistent machine code with platform optimizations
-        /// </summary>
-        public static string GetOrCreateMachineCode()
-        {
-            if (JsonPlayerPrefs.HasKey(KMachineCode))
-            {
-                var existingCode = JsonPlayerPrefs.GetString(KMachineCode);
-                if (!string.IsNullOrEmpty(existingCode))
-                {
-                    return existingCode;
-                }
-            }
-
-            var newCode = GenerateMachineCode();
-            JsonPlayerPrefs.SetString(KMachineCode, newCode);
-            JsonPlayerPrefs.Save();
-            
-            return newCode;
-        }
 
         /// <summary>
         /// Generates a new secure machine code with platform enhancements
@@ -58,7 +32,7 @@ namespace Kogase.Utils
         {
             try
             {
-                #if UNITY_IOS || UNITY_ANDROID || UNITY_STANDALONE
+#if UNITY_IOS || UNITY_ANDROID || UNITY_STANDALONE
                 if (!string.IsNullOrEmpty(SystemInfo.deviceUniqueIdentifier))
                 {
                     return SystemInfo.deviceUniqueIdentifier
@@ -70,7 +44,7 @@ namespace Kogase.Utils
                             )
                         );
                 }
-                #endif
+#endif
                 
                 return Environment.MachineName.GetHashCode().ToString("X8");
             }
@@ -79,14 +53,5 @@ namespace Kogase.Utils
                 return "00000000"; // Fallback if any errors occur
             }
         }
-
-        /// <summary>
-        /// Resets the machine code (use carefully - creates a new identity)
-        /// </summary>
-        public static void ResetMachineCode()
-        {
-            JsonPlayerPrefs.DeleteKey(KMachineCode);
-            JsonPlayerPrefs.Save();
-        }
     }
-} 
+}

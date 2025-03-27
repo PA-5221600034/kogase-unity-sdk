@@ -1,15 +1,13 @@
 using System.IO;
-using Kogase.Core;
+using Kogase.Models;
 using Kogase.Utils;
-using UnityEditor;
 using UnityEngine;
 
 namespace Kogase
 {
     public abstract class KogaseSettings
     {
-        const string KDefaultGeneratedConfigsResourceDirectory = "";
-        public static string GeneratedConfigsResourceDirectory => KDefaultGeneratedConfigsResourceDirectory;
+        const string KDefaultGeneratedDataResourceDirectory = "";
         
         static string _sdkVersion;
         public static string SDKVersion => _sdkVersion ??= GetKogaseSDKPackageVersion();
@@ -18,21 +16,21 @@ namespace Kogase
         public KogaseConfig SDKConfig => sdkConfig ??= LoadSDKConfigFile() ?? new KogaseConfig();
         
 #if UNITY_EDITOR
-        public static string GeneratedConfigsDirectoryFullPath()
+        public static string GeneratedDataDirectoryFullPath()
         {
-            string retval = System.IO.Path.Combine(Application.dataPath, "Resources", GeneratedConfigsResourceDirectory);
+            string retval = Path.Combine(Application.dataPath, "Resources", KDefaultGeneratedDataResourceDirectory);
             return retval;
         }
         
         public static string SDKConfigFullPath()
         {
-            return System.IO.Path.Combine(GeneratedConfigsDirectoryFullPath(), "KogaseSDKConfig.json");
+            return Path.Combine(GeneratedDataDirectoryFullPath(), "KogaseSDKConfig.json");
         }
 #endif
         
         public static string SDKConfigResourcePath()
         {
-            return Path.Combine(GeneratedConfigsResourceDirectory, "KogaseSDKConfig");
+            return Path.Combine(KDefaultGeneratedDataResourceDirectory, "KogaseSDKConfig");
         }
 
         public static KogaseConfig LoadSDKConfigFile()
@@ -53,7 +51,7 @@ namespace Kogase
         {
 #if UNITY_EDITOR
             string json = JsonUtility.ToJson(config, true);
-            string directory = GeneratedConfigsDirectoryFullPath();
+            string directory = GeneratedDataDirectoryFullPath();
             string filePath = SDKConfigFullPath();
             
             if (!Directory.Exists(directory))
@@ -62,15 +60,15 @@ namespace Kogase
             }
             
             File.WriteAllText(filePath, json);
-            AssetDatabase.Refresh();
+            UnityEditor.AssetDatabase.Refresh();
 #endif
         }
 
         static string GetKogaseSDKPackageVersion()
         {
 #if UNITY_EDITOR
-            string[] x = AssetDatabase.FindAssets ( $"t:Script {nameof(KogaseSDKRuntimeFolderPathNavigator)}" );
-            string unityAssetPath = AssetDatabase.GUIDToAssetPath(x[0]);
+            string[] x = UnityEditor.AssetDatabase.FindAssets ( $"t:Script {nameof(KogaseSDKRuntimeFolderPathNavigator)}" );
+            string unityAssetPath = UnityEditor.AssetDatabase.GUIDToAssetPath(x[0]);
             string relativePath = unityAssetPath.StartsWith("Assets/") 
                 ? unityAssetPath.Substring("Assets/".Length) 
                 : unityAssetPath;

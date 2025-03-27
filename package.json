@@ -5,8 +5,7 @@
   "description": "Unity SDK for Komu's Game Service",
   "unity": "2020.3",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.0.1",
-    "com.komutil.jsonplayerprefs": "https://github.com/atqamz/Komutil.JsonPlayerPrefs.git"
+    "com.unity.nuget.newtonsoft-json": "3.0.1"
   },
   "keywords": [
     "kogase",
