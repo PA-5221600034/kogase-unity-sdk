@@ -7,7 +7,7 @@ namespace Kogase
 {
     public abstract class KogaseSettings
     {
-        const string KDefaultGeneratedDataResourceDirectory = "";
+        const string DefaultGeneratedDataResourceDirectory = "";
         
         static string _sdkVersion;
         public static string SDKVersion => _sdkVersion ??= GetKogaseSDKPackageVersion();
@@ -18,7 +18,7 @@ namespace Kogase
 #if UNITY_EDITOR
         public static string GeneratedDataDirectoryFullPath()
         {
-            string retval = Path.Combine(Application.dataPath, "Resources", KDefaultGeneratedDataResourceDirectory);
+            string retval = Path.Combine(Application.dataPath, "Resources", DefaultGeneratedDataResourceDirectory);
             return retval;
         }
         
@@ -30,7 +30,7 @@ namespace Kogase
         
         public static string SDKConfigResourcePath()
         {
-            return Path.Combine(KDefaultGeneratedDataResourceDirectory, "KogaseSDKConfig");
+            return Path.Combine(DefaultGeneratedDataResourceDirectory, "KogaseSDKConfig");
         }
 
         public static KogaseConfig LoadSDKConfigFile()

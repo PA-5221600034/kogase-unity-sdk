@@ -5,7 +5,7 @@ namespace Kogase.Core
 {
     public static class MachineCode
     {
-        const int KDeviceUniqueIdentifierMaxLength = 8;
+        const int DeviceUniqueIdentifierMaxLength = 8;
 
         /// <summary>
         /// Generates a new secure machine code with platform enhancements
@@ -39,7 +39,7 @@ namespace Kogase.Core
                         .Substring(
                             0, 
                             Math.Min(
-                                KDeviceUniqueIdentifierMaxLength, 
+                                DeviceUniqueIdentifierMaxLength, 
                                 SystemInfo.deviceUniqueIdentifier.Length
                             )
                         );
