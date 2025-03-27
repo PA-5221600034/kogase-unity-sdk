@@ -1,266 +1,195 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
-using Kogase.Api;
-using Kogase.Utils;
-using Kogase.Models;
+using UnityEngine.Networking;
+using System.Threading.Tasks;
 
-namespace Kogase.Core
+namespace Kogase
 {
-    /// <summary>
-    /// Main SDK class that provides access to all Kogase functionality
-    /// </summary>
-    [AddComponentMenu("Kogase/Kogase SDK")]
-    public class KogaseSDK : MonoBehaviour
+    public class KogaseSDK
     {
-        #region Singleton Implementation
-        
-        private static KogaseSDK _instance;
-        
-        /// <summary>
-        /// Gets the singleton instance of the KogaseSDK
-        /// </summary>
+        static KogaseSDK instance;
+        public static KogaseSDK Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new KogaseSDK();
+                }
+                return instance;
+            }
+        }
+
+        private string _apiUrl;
+        private string _apiKey;
+        private string _deviceId;
+        private Queue<Dictionary<string, object>> _eventQueue;
+        private bool _isInitialized;
+        private const int MAX_QUEUE_SIZE = 100;
+        private const float AUTO_FLUSH_INTERVAL = 60f; // Seconds
+        private float _lastFlushTime;
+
         public static KogaseSDK Instance
         {
             get
             {
                 if (_instance == null)
                 {
-                    GameObject obj = new GameObject("KogaseSDK");
-                    _instance = obj.AddComponent<KogaseSDK>();
-                    DontDestroyOnLoad(obj);
+                    _instance = new KogaseSDK();
                 }
-                
                 return _instance;
             }
         }
-        
-        #endregion
-        
-        [Header("Configuration")]
-        [Tooltip("The base URL of the Kogase API server")]
-        [SerializeField] 
-        private string apiUrl = "http://localhost:8080";
-        
-        [Tooltip("Your Kogase API key")]
-        [SerializeField] 
-        private string apiKey = "";
-        
-        [Tooltip("Enable debug logging")]
-        [SerializeField] 
-        private bool enableDebugLogging = false;
-        
-        [Tooltip("Automatically track user sessions")]
-        [SerializeField] 
-        private bool autoTrackSessions = true;
-        
-        [Tooltip("Enable offline caching of events")]
-        [SerializeField] 
-        private bool enableOfflineCache = true;
-        
-        // Internal components
-        private KogaseConfig config;
-        private KogaseApiClient apiClient;
-        private KogaseTelemetry telemetry;
-        private SessionManager sessionManager;
-        
-        // Initialization flag
-        private bool isInitialized = false;
-        
-        /// <summary>
-        /// Gets the telemetry component
-        /// </summary>
-        public KogaseTelemetry Telemetry => telemetry;
-        
-        /// <summary>
-        /// Gets the session manager
-        /// </summary>
-        public SessionManager SessionManager => sessionManager;
-        
-        /// <summary>
-        /// Gets whether the SDK is initialized
-        /// </summary>
-        public bool IsInitialized => isInitialized;
-        
-        /// <summary>
-        /// Gets the current SDK configuration
-        /// </summary>
-        public KogaseConfig Config => config;
 
-        /// <summary>
-        /// Initialize the SDK with the provided configuration
-        /// </summary>
-        /// <param name="apiUrl">Base URL of the Kogase API server</param>
-        /// <param name="apiKey">Your Kogase API key</param>
-        /// <param name="enableDebugLogging">Enable debug logging</param>
-        /// <param name="autoTrackSessions">Automatically track user sessions</param>
-        /// <param name="enableOfflineCache">Enable offline caching of events</param>
-        public void Initialize(string apiUrl, string apiKey, bool enableDebugLogging = false, 
-                              bool autoTrackSessions = true, bool enableOfflineCache = true)
+        private KogaseSDK()
         {
-            if (isInitialized)
-            {
-                Debug.LogWarning("Kogase SDK is already initialized");
-                return;
-            }
-
-            // Create configuration
-            config = new KogaseConfig
-            {
-                ApiUrl = apiUrl,
-                ApiKey = apiKey,
-                EnableDebugLogging = enableDebugLogging,
-                AutoTrackSessions = autoTrackSessions,
-                EnableOfflineCache = enableOfflineCache
-            };
-            
-            InitializeWithConfig(config);
+            _eventQueue = new Queue<Dictionary<string, object>>();
+            _isInitialized = false;
         }
 
-        /// <summary>
-        /// Initialize the SDK with the configuration from the MonoBehaviour
-        /// </summary>
-        public void Initialize()
+        public void Initialize(string apiUrl, string apiKey)
         {
-            if (isInitialized)
-            {
-                Debug.LogWarning("Kogase SDK is already initialized");
-                return;
-            }
-
-            // Create configuration from serialized fields
-            config = new KogaseConfig
-            {
-                ApiUrl = apiUrl,
-                ApiKey = apiKey,
-                EnableDebugLogging = enableDebugLogging,
-                AutoTrackSessions = autoTrackSessions,
-                EnableOfflineCache = enableOfflineCache
-            };
+            _apiUrl = apiUrl.TrimEnd('/');
+            _apiKey = apiKey;
+            _deviceId = SystemInfo.deviceUniqueIdentifier;
+            _isInitialized = true;
             
-            InitializeWithConfig(config);
+            Debug.Log($"Kogase SDK initialized with API URL: {_apiUrl}");
+            
+            // Record installation event
+            RecordInstallation();
         }
 
-        /// <summary>
-        /// Common initialization with a configuration object
-        /// </summary>
-        /// <param name="config">The configuration to use</param>
-        private void InitializeWithConfig(KogaseConfig config)
+        private void CheckInitialization()
         {
-            // Create components
-            apiClient = new KogaseApiClient(config, this);
-            telemetry = new KogaseTelemetry(config, this, apiClient);
-            
-            // Initialize telemetry
-            telemetry.Initialize();
-            
-            // Create and initialize session manager if auto-tracking is enabled
-            if (config.AutoTrackSessions)
+            if (!_isInitialized)
             {
-                sessionManager = new SessionManager(telemetry, config, this);
-                sessionManager.Initialize();
+                throw new InvalidOperationException("Kogase SDK is not initialized. Call Initialize() first.");
             }
-            
-            // Record installation (first run)
-            if (IsFirstRun())
-            {
-                RecordFirstRun();
-            }
-            
-            isInitialized = true;
         }
 
-        /// <summary>
-        /// Records a custom event
-        /// </summary>
-        /// <param name="eventName">Name of the event</param>
-        /// <param name="parameters">Optional parameters for the event</param>
         public void RecordEvent(string eventName, Dictionary<string, object> parameters = null)
         {
-            if (!isInitialized)
+            CheckInitialization();
+
+            var eventData = new Dictionary<string, object>
             {
-                Debug.LogWarning("Kogase SDK is not initialized. Use KogaseSDK.Instance.Initialize() first.");
-                return;
+                { "event_name", eventName },
+                { "timestamp", DateTime.UtcNow.ToString("o") },
+                { "device_id", _deviceId },
+                { "platform", Application.platform.ToString() },
+                { "os_version", SystemInfo.operatingSystem },
+                { "sdk_version", "1.0.0" }
+            };
+
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    eventData[$"params_{param.Key}"] = param.Value;
+                }
             }
-            
-            telemetry.RecordEvent(eventName, parameters);
-        }
 
-        /// <summary>
-        /// Manually flush events to the server
-        /// </summary>
-        public void Flush()
-        {
-            if (!isInitialized)
+            _eventQueue.Enqueue(eventData);
+
+            if (_eventQueue.Count >= MAX_QUEUE_SIZE)
             {
-                Debug.LogWarning("Kogase SDK is not initialized. Use KogaseSDK.Instance.Initialize() first.");
-                return;
-            }
-            
-            telemetry.Flush();
-        }
-
-        #region Private Methods
-
-        private void Awake()
-        {
-            // Implement singleton pattern
-            if (_instance != null && _instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-
-        private void OnDestroy()
-        {
-            // Clean up if this is the instance
-            if (_instance == this)
-            {
-                _instance = null;
+                FlushEvents();
             }
         }
 
-        /// <summary>
-        /// Checks if this is the first run of the application
-        /// </summary>
-        /// <returns>True if this is the first run, false otherwise</returns>
-        private bool IsFirstRun()
+        private void RecordInstallation()
         {
-            const string FIRST_RUN_KEY = "kogase_first_run";
-            bool isFirstRun = !PlayerPrefs.HasKey(FIRST_RUN_KEY);
-            
-            if (isFirstRun)
+            var installParams = new Dictionary<string, object>
             {
-                PlayerPrefs.SetInt(FIRST_RUN_KEY, 1);
-                PlayerPrefs.Save();
-            }
-            
-            return isFirstRun;
-        }
-
-        /// <summary>
-        /// Records first run/installation event
-        /// </summary>
-        private void RecordFirstRun()
-        {
-            Dictionary<string, object> properties = new Dictionary<string, object>
-            {
+                { "app_version", Application.version },
                 { "device_model", SystemInfo.deviceModel },
-                { "device_name", SystemInfo.deviceName },
+                { "device_type", SystemInfo.deviceType.ToString() },
                 { "processor_type", SystemInfo.processorType },
                 { "system_memory_size", SystemInfo.systemMemorySize },
                 { "graphics_device_name", SystemInfo.graphicsDeviceName },
-                { "graphics_memory_size", SystemInfo.graphicsMemorySize },
-                { "screen_resolution", $"{Screen.width}x{Screen.height}" }
+                { "graphics_memory_size", SystemInfo.graphicsMemorySize }
             };
-            
-            telemetry.RecordInstallation(properties);
+
+            RecordEvent("app_install", installParams);
         }
 
-        #endregion
+        public async void FlushEvents()
+        {
+            CheckInitialization();
+
+            if (_eventQueue.Count == 0)
+            {
+                return;
+            }
+
+            var events = new List<Dictionary<string, object>>();
+            while (_eventQueue.Count > 0)
+            {
+                events.Add(_eventQueue.Dequeue());
+            }
+
+            var json = JsonUtility.ToJson(new { events = events });
+            var request = new UnityWebRequest($"{_apiUrl}/api/v1/events", "POST");
+            
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-API-Key", _apiKey);
+
+            try
+            {
+                var operation = request.SendWebRequest();
+                while (!operation.isDone)
+                {
+                    await Task.Yield();
+                }
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    Debug.Log($"Successfully sent {events.Count} events to Kogase server");
+                }
+                else
+                {
+                    Debug.LogError($"Failed to send events to Kogase server: {request.error}");
+                    // Re-queue failed events
+                    foreach (var evt in events)
+                    {
+                        _eventQueue.Enqueue(evt);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Exception while sending events to Kogase server: {ex.Message}");
+                // Re-queue failed events
+                foreach (var evt in events)
+                {
+                    _eventQueue.Enqueue(evt);
+                }
+            }
+            finally
+            {
+                request.Dispose();
+            }
+        }
+
+        public void Update()
+        {
+            if (!_isInitialized)
+            {
+                return;
+            }
+
+            float currentTime = Time.realtimeSinceStartup;
+            if (currentTime - _lastFlushTime >= AUTO_FLUSH_INTERVAL)
+            {
+                FlushEvents();
+                _lastFlushTime = currentTime;
+            }
+        }
     }
 } 

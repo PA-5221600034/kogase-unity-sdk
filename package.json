@@ -1,21 +1,21 @@
 {
-  "name": "io.kogase.unitysdk",
-  "version": "0.1.0",
+  "name": "com.kogase.unitysdk",
+  "version": "1.0.0",
   "displayName": "Kogase Unity SDK",
-  "description": "Unity SDK for Kogase Game Analytics and Telemetry",
+  "description": "Unity SDK for Komu's Game Service",
   "unity": "2020.3",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.0.2"
+    "com.unity.nuget.newtonsoft-json": "3.0.1",
+    "com.komutil.jsonplayerprefs": "https://github.com/atqamz/Komutil.JsonPlayerPrefs.git"
   },
   "keywords": [
     "kogase",
-    "analytics",
-    "telemetry",
-    "gamedev"
+    "komu",
+    "game service"
   ],
   "author": {
-    "name": "Kogase Team",
-    "email": "info@kogase.io",
-    "url": "https://kogase.io"
+    "name": "Atqa Munzir",
+    "email": "atqamz@gmail.com",
+    "url": "https://github.com/atqamz"
   }
 } 
