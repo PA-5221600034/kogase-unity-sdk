@@ -1,4 +1,6 @@
 using System;
+using UnityEngine.Serialization;
+
 namespace Kogase.Core
 {
     /// <summary>
@@ -10,7 +12,7 @@ namespace Kogase.Core
         /// <summary>
         /// The base URL of the Kogase API server
         /// </summary>
-        public string BackendUrl = "http://localhost:8080";
+        public string BaseUrl = "http://localhost:8080";
 
         /// <summary>
         /// API key for the project
@@ -50,7 +52,7 @@ namespace Kogase.Core
         {
             return new KogaseConfig
             {
-                BackendUrl = this.BackendUrl,
+                BaseUrl = this.BaseUrl,
                 ApiKey = this.ApiKey,
                 ApiVersion = this.ApiVersion,
                 MaxCachedEvents = this.MaxCachedEvents,
