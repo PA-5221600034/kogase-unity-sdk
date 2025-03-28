@@ -2,417 +2,431 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Kogase.Utils;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Networking;
-namespace Kogase.Core.Http
+
+namespace Kogase.Core
 {
     /// <summary>
     /// Builder class for creating HTTP requests using a fluent API pattern.
     /// </summary>
     public class HttpRequestBuilder
     {
-        HttpMethod method;
-        string baseUrl;
-        string path;
-        Dictionary<string, string> queryParams;
-        Dictionary<string, string> pathParams;
-        Dictionary<string, string> headers;
-        string body;
-        byte[] bodyBytes;
-        List<IMultipartFormSection> formData;
-        bool useFormData;
-        FileStream fileStream;
+        const string GetMethod = "GET";
+        const string PostMethod = "POST";
+        const string PutMethod = "PUT";
+        const string PatchMethod = "PATCH";
+        const string DeleteMethod = "DELETE";
 
-        /// <summary>
-        /// Creates a new HttpRequestBuilder with GET method
-        /// </summary>
+        readonly StringBuilder formBuilder = new(1024);
+        readonly StringBuilder queryBuilder = new(256);
+        readonly StringBuilder urlBuilder = new(256);
+        Dictionary<string, string> additionalData = new();
+        HttpRequest result;
+
+        static HttpRequestBuilder CreatePrototype(string method, string url)
+        {
+            var builder = new HttpRequestBuilder
+            {
+                result = new HttpRequest
+                {
+                    Method = method
+                }
+            };
+
+            builder.urlBuilder.Append(url);
+
+            return builder;
+        }
+
         public static HttpRequestBuilder CreateGet(string url)
         {
-            return new HttpRequestBuilder(HttpMethod.Get, url);
+            return CreatePrototype(GetMethod, url);
         }
 
-        /// <summary>
-        /// Creates a new HttpRequestBuilder with POST method
-        /// </summary>
         public static HttpRequestBuilder CreatePost(string url)
         {
-            return new HttpRequestBuilder(HttpMethod.Post, url);
+            return CreatePrototype(PostMethod, url);
         }
 
-        /// <summary>
-        /// Creates a new HttpRequestBuilder with PUT method
-        /// </summary>
         public static HttpRequestBuilder CreatePut(string url)
         {
-            return new HttpRequestBuilder(HttpMethod.Put, url);
+            return CreatePrototype(PutMethod, url);
         }
 
-        /// <summary>
-        /// Creates a new HttpRequestBuilder with DELETE method
-        /// </summary>
-        public static HttpRequestBuilder CreateDelete(string url)
-        {
-            return new HttpRequestBuilder(HttpMethod.Delete, url);
-        }
-
-        /// <summary>
-        /// Creates a new HttpRequestBuilder with PATCH method
-        /// </summary>
         public static HttpRequestBuilder CreatePatch(string url)
         {
-            return new HttpRequestBuilder(HttpMethod.Patch, url);
+            return CreatePrototype(PatchMethod, url);
         }
 
-        HttpRequestBuilder(HttpMethod method, string url)
+        public static HttpRequestBuilder CreateDelete(string url)
         {
-            this.method = method;
+            return CreatePrototype(DeleteMethod, url);
+        }
+
+        /// <summary>
+        /// For endpoint URLs, we'll replace "{brackets}" key with urlEncoded (Uri-escaped) val.
+        /// - Eg, "some/url/path/{namespace}/foo" will replace {namespace} key with val.
+        /// - Not to be confused with WithQueryParam (GET) || WithFormParam (POST).  
+        /// - WithParamParams is the singular version of WithPathParams().  
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public HttpRequestBuilder WithPathParam(string key, string value)
+        {
+            if (string.IsNullOrEmpty(key)) throw new Exception($"Path parameter key is null or empty.");
+
+            if (string.IsNullOrEmpty(value)) throw new Exception($"The path value of key={key} is null or empty.");
+
+            urlBuilder.Replace("{" + key + "}", Uri.EscapeDataString(value));
+
+            return this;
+        }
+
+        /// <summary>
+        /// For endpoint URLs, we'll replace "{brackets}" key with urlEncoded (Uri-escaped) val.
+        /// - Eg, "some/url/path/{namespace}/foo" will replace {namespace} key with val.
+        /// - Not to be confused with WithQueryParam(s) (GET) || WithFormParam (POST).  
+        /// - WithParamParams() is the plural version of WithPathParam(). 
+        /// </summary>
+        /// <param name="pathParams"></param>
+        /// <returns></returns>
+        public HttpRequestBuilder WithPathParams(IDictionary<string, string> pathParams)
+        {
+            foreach (var param in pathParams) WithPathParam(param.Key, param.Value);
+
+            return this;
+        }
+
+        /// <summary>
+        /// For endpoint URLs, we'll replace "{brackets}" key with urlEncoded (Uri-escaped) val.
+        /// - Eg, "some/url/path/{namespace}/foo" will replace {namespace} key with val.
+        /// - Not to be confused with WithFormParam (POST) || WithPathParam ({bracket} val swapping) 
+        /// - WithQueryParam() is the singular version of WithPathParam(). 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public HttpRequestBuilder WithQueryParam(string key, string value)
+        {
+            Assert.IsNotNull(key, "query key is null");
+            Assert.IsNotNull(value, $"query value is null for key {key}");
+
+            if (string.IsNullOrEmpty(value)) return this;
+
+            if (queryBuilder.Length > 0) queryBuilder.Append("&");
+
+            queryBuilder.Append($"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}");
+
+            return this;
+        }
+
+        /// <summary>
+        /// For endpoint URLs, we'll replace "{brackets}" key with urlEncoded (Uri-escaped) val.
+        /// - Eg, "some/url/path/{namespace}/foo" will replace {namespace} key with val.
+        /// - Not to be confused with WithFormParam (POST) || WithPathParam ({bracket} val swapping) 
+        /// - WithQueryParam() is the singular version of WithPathParam(). 
+        /// </summary>
+        /// <param name="queriesDict"></param>
+        /// <returns></returns>
+        public HttpRequestBuilder WithQueryParams(IDictionary<string, string> queriesDict)
+        {
+            foreach (var query in queriesDict) WithQueryParam(query.Key, query.Value);
+
+            return this;
+        }
+
+        /// <summary>
+        /// For GET-like HTTP calls only,  For POST-like HTTP calls, use WithFormParam() instead.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public HttpRequestBuilder WithQueryParam(string key, ICollection<string> values)
+        {
+            foreach (var value in values) WithQueryParam(Uri.EscapeDataString(key), Uri.EscapeDataString(value));
+
+            return this;
+        }
+
+        public HttpRequestBuilder WithQueries(Dictionary<string, string> queryMap)
+        {
+            foreach (var queryPair in queryMap) WithQueryParam(queryPair.Key, queryPair.Value);
+
+            return this;
+        }
+
+        public HttpRequestBuilder WithQueries<T>(T queryObject)
+        {
+            if (queryBuilder.Length > 0) queryBuilder.Append("&");
+
+            queryBuilder.Append(queryObject.ToForm());
+
+            return this;
+        }
+
+        public HttpRequestBuilder WithBasicAuth()
+        {
+            result.AuthType = HttpAuthType.BASIC;
+
+            return this;
+        }
+
+        public HttpRequestBuilder WithBasicAuthWithCookie(string encodeKey)
+        {
+            return WithBasicAuthWithCookie(encodeKey, null);
+        }
+
+        internal HttpRequestBuilder WithBasicAuthWithCookie(string encodeKey,
+            Models.IdentifierGeneratorConfig identifierGeneratorConfig)
+        {
+            result.AuthType = HttpAuthType.BASIC;
+            var deviceProvider =
+                DeviceProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
+            result.Headers["cookie"] = "device-token=" + deviceProvider.Identifier;
+            return this;
+        }
+        
+        public HttpRequestBuilder WithBasicAuthWithCookieAndAuthTrustId(string encodeKey, string authTrustId = null)
+        {
+            return WithBasicAuthWithCookieAndAuthTrustId(encodeKey, identifierGeneratorConfig: null, authTrustId: authTrustId);
+        }
+        
+        internal HttpRequestBuilder WithBasicAuthWithCookieAndAuthTrustId(string encodeKey, Models.IdentifierGeneratorConfig identifierGeneratorConfig, string authTrustId)
+        {
+            this.result.AuthType = HttpAuthType.BASIC;
+            DeviceProvider deviceProvider = DeviceProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
+            this.result.Headers["cookie"] = "device-token=" + deviceProvider.Identifier;
+            if (!string.IsNullOrEmpty(authTrustId))
+            {
+                this.result.Headers["Auth-Trust-Id"] = authTrustId;
+            }
+
+            return this;
+        }
+        
+        public HttpRequestBuilder WithApiKeyAuth()
+        {
+            result.AuthType = HttpAuthType.API_KEY;
+
+            return this;
+        }
+
+        public HttpRequestBuilder WithBasicAuth(string username, string password, bool passwordIsRequired = true)
+        {
+            if (string.IsNullOrEmpty(username) || (passwordIsRequired && string.IsNullOrEmpty(password)))
+            {
+                throw new ArgumentException("username and password for Basic Authorization shouldn't be empty or null");
+            }
             
-            // Parse URL to separate base URL and path
-            if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
-            {
-                baseUrl = $"{uri.Scheme}://{uri.Authority}";
-                path = uri.PathAndQuery;
-            }
-            else
-            {
-                baseUrl = "";
-                path = url;
-            }
-
-            queryParams = new Dictionary<string, string>();
-            pathParams = new Dictionary<string, string>();
-            headers = new Dictionary<string, string>();
-        }
-
-        /// <summary>
-        /// Sets a path parameter for URL substitution
-        /// </summary>
-        public HttpRequestBuilder WithPathParam(string name, string value)
-        {
-            if (string.IsNullOrEmpty(name) || value == null)
-            {
-                return this;
-            }
-
-            pathParams[name] = value;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets multiple path parameters for URL substitution
-        /// </summary>
-        public HttpRequestBuilder WithPathParams(Dictionary<string, string> parameters)
-        {
-            if (parameters == null)
-            {
-                return this;
-            }
-
-            foreach (var param in parameters)
-            {
-                WithPathParam(param.Key, param.Value);
-            }
+            string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(username + ":" + password));
+            result.Headers["Authorization"] = "Basic " + credentials;
+            result.AuthType = HttpAuthType.BASIC;
 
             return this;
         }
 
-        /// <summary>
-        /// Sets a query parameter
-        /// </summary>
-        public HttpRequestBuilder WithQueryParam(string name, string value)
+        public HttpRequestBuilder WithBearerAuth()
         {
-            if (string.IsNullOrEmpty(name) || value == null)
-            {
-                return this;
-            }
+            this.result.AuthType = HttpAuthType.BEARER;
 
-            queryParams[name] = value;
             return this;
         }
 
-        /// <summary>
-        /// Sets multiple query parameters
-        /// </summary>
-        public HttpRequestBuilder WithQueryParams(Dictionary<string, string> parameters)
+        public HttpRequestBuilder WithBearerAuth(string token)
         {
-            if (parameters == null)
+            if (string.IsNullOrEmpty(token))
             {
-                return this;
+                throw new ArgumentException("token for Bearer Authorization shouldn't be empty or null");
             }
+            
+            this.result.Headers["Authorization"] = "Bearer " + token;
+            this.result.AuthType = HttpAuthType.BEARER;
 
-            foreach (var param in parameters)
-            {
-                WithQueryParam(param.Key, param.Value);
-            }
+            return this;
+        }
+
+        public HttpRequestBuilder WithContentType(MediaType mediaType)
+        {
+            this.result.Headers["Content-Type"] = mediaType.ToString();
+
+            return this;
+        }
+
+        public HttpRequestBuilder WithContentType(string rawMediaType)
+        {
+            this.result.Headers["Content-Type"] = rawMediaType;
+
+            return this;
+        }
+
+        public HttpRequestBuilder Accepts(MediaType mediaType)
+        {
+            this.result.Headers["Accept"] = mediaType.ToString();
 
             return this;
         }
 
         /// <summary>
-        /// Sets a collection of values for the same query parameter
+        /// Add a FORM (POST-like) param key:val.
+        /// - Not to be confused with WithQueryParam (GET) || WithPathParam ({bracket} val swapping)
+        /// - TODO: Create plural version, WithFormParams(), like similar funcs. 
         /// </summary>
-        public HttpRequestBuilder WithQueryParam(string name, IEnumerable<string> values)
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public HttpRequestBuilder WithFormParam(string key, string value)
         {
-            if (string.IsNullOrEmpty(name) || values == null)
+            Assert.IsNotNull(key, "form key is null");
+            Assert.IsNotNull(value, $"form value is null for key {key}");
+
+            if (string.IsNullOrEmpty(value)) return this;
+            
+            if (this.formBuilder.Length > 0)
             {
-                return this;
+                this.formBuilder.Append("&");
             }
-
-            foreach (string value in values)
-            {
-                WithQueryParam(name, value);
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Sets a header
-        /// </summary>
-        public HttpRequestBuilder WithHeader(string name, string value)
-        {
-            if (string.IsNullOrEmpty(name) || value == null)
-            {
-                return this;
-            }
-
-            headers[name] = value;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets multiple headers
-        /// </summary>
-        public HttpRequestBuilder WithHeaders(Dictionary<string, string> headers)
-        {
-            if (headers == null)
-            {
-                return this;
-            }
-
-            foreach (var header in headers)
-            {
-                WithHeader(header.Key, header.Value);
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Sets API Key authentication header
-        /// </summary>
-        public HttpRequestBuilder WithApiKeyAuth(string apiKey)
-        {
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                Debug.LogWarning("API Key is null or empty");
-                return this;
-            }
-
-            return WithHeader("X-API-Key", apiKey);
-        }
-
-        /// <summary>
-        /// Sets the request body as a JSON object
-        /// </summary>
-        public HttpRequestBuilder WithBody(object bodyObj)
-        {
-            if (bodyObj == null)
-            {
-                body = null;
-                return this;
-            }
-
-            try
-            {
-                body = JsonUtility.ToJson(bodyObj);
                 
-                // Set content type header if not already set
-                if (!headers.ContainsKey("Content-Type"))
-                {
-                    headers["Content-Type"] = "application/json";
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error serializing request body: {e.Message}");
-                body = null;
-            }
-            
+            this.formBuilder.Append($"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}");
+
             return this;
         }
-
+        
         /// <summary>
-        /// Sets the request body as a raw string
+        /// Add/append to additionalData form field as to be included in the request. param key:val.
         /// </summary>
-        public HttpRequestBuilder WithStringBody(string content, string contentType = "text/plain")
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public HttpRequestBuilder AddAdditionalData(string key, string value)
         {
-            body = content;
-            
-            if (!headers.ContainsKey("Content-Type"))
-            {
-                headers["Content-Type"] = contentType;
-            }
-            
-            return this;
-        }
 
-        /// <summary>
-        /// Sets the request body as raw bytes
-        /// </summary>
-        public HttpRequestBuilder WithByteBody(byte[] bytes, string contentType = "application/octet-stream")
-        {
-            bodyBytes = bytes;
-            
-            if (!headers.ContainsKey("Content-Type"))
+            if (string.IsNullOrEmpty(key))
             {
-                headers["Content-Type"] = contentType;
-            }
-            
-            return this;
-        }
-
-        /// <summary>
-        /// Sets form data to be sent with the request
-        /// </summary>
-        public HttpRequestBuilder WithFormData(Dictionary<string, string> formParameters)
-        {
-            if (formParameters == null || formParameters.Count == 0)
-            {
+                Assert.IsNotNull(key, "Additional data key is null");
                 return this;
             }
 
-            useFormData = true;
-            formData = new List<IMultipartFormSection>();
-            
-            foreach (var param in formParameters)
+            if (string.IsNullOrEmpty(value))
             {
-                formData.Add(new MultipartFormDataSection(param.Key, param.Value));
-            }
-            
-            return this;
-        }
-
-        /// <summary>
-        /// Adds a file to be uploaded with the request
-        /// </summary>
-        public HttpRequestBuilder WithFile(string fieldName, byte[] fileData, string fileName, string contentType = "application/octet-stream")
-        {
-            if (fileData == null || string.IsNullOrEmpty(fieldName))
-            {
+                Assert.IsNotNull(value, $"Additional data value is null for key {key}");
                 return this;
             }
-            
-            useFormData = true;
-            
-            if (formData == null)
-            {
-                formData = new List<IMultipartFormSection>();
-            }
-            
-            formData.Add(new MultipartFormFileSection(fieldName, fileData, fileName, contentType));
-            
+
+            this.additionalData.Add(key, value);
+
             return this;
         }
 
-        /// <summary>
-        /// Sets the Content-Type header
-        /// </summary>
-        public HttpRequestBuilder WithContentType(string contentType)
+        public HttpRequestBuilder WithBody(string body)
         {
-            return WithHeader("Content-Type", contentType);
+            if (!this.result.Headers.ContainsKey("Content-Type"))
+            {
+                this.result.Headers.Add("Content-Type", MediaType.TextPlain.ToString());
+            }
+            
+            this.result.BodyBytes = Encoding.UTF8.GetBytes(body);
+
+            return this;
+        }
+        
+        public HttpRequestBuilder WithBody(byte[] body)
+        {
+            if (!this.result.Headers.ContainsKey("Content-Type"))
+            {
+                this.result.Headers.Add("Content-Type", MediaType.ApplicationOctetStream.ToString());
+            }
+            
+            this.result.BodyBytes = body;
+
+            return this;
         }
 
-        /// <summary>
-        /// Builds the HTTP request
-        /// </summary>
-        public IHttpRequest Build()
+        public HttpRequestBuilder WithBody(FormDataContent body)
         {
-            // Process URL with path params
-            string processedPath = ProcessPathParams(path, pathParams);
-            string url = baseUrl + processedPath;
-            
-            // Append query params
-            if (queryParams != null && queryParams.Count > 0)
+            if (!this.result.Headers.ContainsKey("Content-Type"))
             {
-                url = AppendQueryParams(url, queryParams);
+                this.result.Headers.Add("Content-Type", body.GetMediaType());
             }
             
-            // Create the HttpRequest
-            HttpRequest request = new HttpRequest
-            {
-                Method = method,
-                Url = url,
-                Headers = new Dictionary<string, string>(headers)
-            };
-            
-            if (useFormData && formData != null && formData.Count > 0)
-            {
-                request.FormData = formData;
-            }
-            else if (bodyBytes != null)
-            {
-                request.BodyBytes = bodyBytes;
-            }
-            else
-            {
-                request.Body = body;
-            }
-            
-            return request;
+            this.result.BodyBytes = body.Get();
+
+            return this;
         }
 
-        string ProcessPathParams(string inputPath, Dictionary<string, string> pathParams)
+        public HttpRequestBuilder WithFormBody<T>(T body)
         {
-            if (pathParams == null || pathParams.Count == 0)
+            if (!this.result.Headers.ContainsKey("Content-Type"))
             {
-                return inputPath;
+                this.result.Headers.Add("Content-Type", MediaType.ApplicationForm.ToString());
+            }
+
+            this.result.BodyBytes = Encoding.UTF8.GetBytes(body.ToForm());
+
+            return this;
+        }
+        
+        public HttpRequestBuilder WithJsonBody<T>(T body)
+        {
+            if (!this.result.Headers.ContainsKey("Content-Type"))
+            {
+                this.result.Headers.Add("Content-Type", MediaType.ApplicationJson.ToString());
+            }
+
+            this.result.BodyBytes = body.ToUtf8Json();
+
+            return this;
+        }
+        
+        public IHttpRequest GetResult()
+        {
+            if (this.queryBuilder.Length > 0)
+            {
+                this.urlBuilder.Append("?");
+                this.urlBuilder.Append(this.queryBuilder);
+            }
+
+            if (this.additionalData.Count > 0)
+            {
+                this.WithFormParam("additionalData", additionalData.ToJsonString());
             }
             
-            string processedPath = inputPath;
-            
-            foreach (KeyValuePair<string, string> pathParam in pathParams)
+            if (this.formBuilder.Length > 0)
             {
-                // Replace {paramName} with value
-                processedPath = processedPath.Replace("{" + pathParam.Key + "}", 
-                    Uri.EscapeDataString(pathParam.Value));
+                this.result.Headers["Content-Type"] = MediaType.ApplicationForm.ToString();
+                this.result.BodyBytes = Encoding.UTF8.GetBytes(this.formBuilder.ToString());
             }
-            
-            return processedPath;
+
+            // TODO: maybe add this later
+            // if (!string.IsNullOrEmpty(gameClientVersion))
+            // {
+            //     this.result.Headers["App-Version"] = appVersion;
+            // }
+            // if (!string.IsNullOrEmpty(sdkVersion))
+            // {
+            //     this.result.Headers["SDK-Version"] = sdkVersion;
+            // }
+
+            this.result.Url = this.urlBuilder.ToString();
+
+            return this.result;
         }
 
-        string AppendQueryParams(string url, Dictionary<string, string> queryParams)
+        class HttpRequest : IHttpRequest
         {
-            if (queryParams == null || queryParams.Count == 0)
-            {
-                return url;
-            }
-            
-            StringBuilder urlBuilder = new StringBuilder(url);
-            bool firstParam = !url.Contains("?");
-            
-            foreach (var param in queryParams)
-            {
-                urlBuilder.Append(firstParam ? "?" : "&");
-                urlBuilder.Append(Uri.EscapeDataString(param.Key));
-                urlBuilder.Append("=");
-                urlBuilder.Append(Uri.EscapeDataString(param.Value));
-                firstParam = false;
-            }
-            
-            return urlBuilder.ToString();
+            IHttpRequest httpRequestImpl;
+
+            public string Id { get; set; }
+            public string Method { get; set; }
+            public string Url { get; set; }
+            public HttpAuthType AuthType { get; set; }
+            public IDictionary<string, string> Headers { get; } = new Dictionary<string, string>();
+            public byte[] BodyBytes { get; set; }
+            public int Priority { get; set; } = HttpHelper.HttpRequestDefaultPriority;
         }
     }
-
-    /// <summary>
-    /// HTTP Methods supported by the HttpRequestBuilder
-    /// </summary>
-    public enum HttpMethod
-    {
-        Get,
-        Post,
-        Put,
-        Delete,
-        Patch
-    }
-} 
+}
