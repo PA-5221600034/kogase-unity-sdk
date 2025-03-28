@@ -46,7 +46,7 @@ namespace Kogase.Editor
 
             if (originalConfig == null)
             {
-                originalConfig = KogaseSettings.LoadSDKConfigFile();
+                originalConfig = KogaseSettings.SDKConfig;
                 
                 if (originalConfig == null)
                 {

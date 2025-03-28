@@ -42,6 +42,11 @@ namespace Kogase.Models
         /// Whether to automatically cache events when offline and send when back online
         /// </summary>
         public bool EnableOfflineCache = true;
+        
+        public string GetBackendUrl()
+        {
+            return $"{BaseUrl}/api/{ApiVersion}";
+        }
 
         /// <summary>
         /// Clone the configuration

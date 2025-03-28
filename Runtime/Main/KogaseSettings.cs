@@ -7,33 +7,33 @@ namespace Kogase
 {
     public abstract class KogaseSettings
     {
-        const string DefaultGeneratedDataResourceDirectory = "";
+        const string DefaultGeneratedDataResourceDir = "";
         
         static string _sdkVersion;
         public static string SDKVersion => _sdkVersion ??= GetKogaseSDKPackageVersion();
         
-        KogaseConfig sdkConfig;
-        public KogaseConfig SDKConfig => sdkConfig ??= LoadSDKConfigFile() ?? new KogaseConfig();
+        static KogaseConfig _sdkConfig;
+        public static KogaseConfig SDKConfig => _sdkConfig ??= LoadSDKConfigFile() ?? new KogaseConfig();
         
 #if UNITY_EDITOR
-        public static string GeneratedDataDirectoryFullPath()
+        static string GeneratedDataFullPathDir()
         {
-            string retval = Path.Combine(Application.dataPath, "Resources", DefaultGeneratedDataResourceDirectory);
+            string retval = Path.Combine(Application.dataPath, "Resources", DefaultGeneratedDataResourceDir);
             return retval;
         }
         
-        public static string SDKConfigFullPath()
+        static string SDKConfigFullPath()
         {
-            return Path.Combine(GeneratedDataDirectoryFullPath(), "KogaseSDKConfig.json");
+            return Path.Combine(GeneratedDataFullPathDir(), "KogaseSDKConfig.json");
         }
 #endif
-        
-        public static string SDKConfigResourcePath()
-        {
-            return Path.Combine(DefaultGeneratedDataResourceDirectory, "KogaseSDKConfig");
-        }
 
-        public static KogaseConfig LoadSDKConfigFile()
+        static string SDKConfigResourcePath()
+        {
+            return Path.Combine(DefaultGeneratedDataResourceDir, "KogaseSDKConfig");
+        }
+        
+        static KogaseConfig LoadSDKConfigFile()
         {
             KogaseConfig retval = null;
             Object configFile = Resources.Load(SDKConfigResourcePath());
@@ -51,7 +51,7 @@ namespace Kogase
         {
 #if UNITY_EDITOR
             string json = JsonUtility.ToJson(config, true);
-            string directory = GeneratedDataDirectoryFullPath();
+            string directory = GeneratedDataFullPathDir();
             string filePath = SDKConfigFullPath();
             
             if (!Directory.Exists(directory))

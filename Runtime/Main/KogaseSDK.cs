@@ -1,24 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Kogase.Core;
-using UnityEngine;
-
 namespace Kogase
 {
-    public class KogaseSDK
+    /// <summary>
+    /// Main entry point for the Kogase SDK
+    /// </summary>
+    public static class KogaseSDK
     {
-        static KogaseSDK _instance;
-        public static KogaseSDK Instance
+        static KogaseSDKImpl _implementation;
+        
+        internal static KogaseSDKImpl Implementation
         {
-            get { return _instance ??= new KogaseSDK(); }
+            get => _implementation ??= new KogaseSDKImpl();
+            set => _implementation = value;
         }
-
-        Queue<Dictionary<string, object>> eventQueue;
-
-        KogaseSDK()
-        {
-            eventQueue = new Queue<Dictionary<string, object>>();
-        }
+        
+        public static string Version => Implementation.Version;
     }
-} 
+}
