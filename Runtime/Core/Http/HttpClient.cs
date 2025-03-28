@@ -17,7 +17,7 @@ namespace Kogase.Core
     /// </summary>
     public class HttpClient
     {
-        internal const string ApiKeyHeaderKey = "X-API-Key";
+        internal const string ApiKeyHeaderKey = "X-Kogase-API-Key";
 
         enum RequestState
         {
