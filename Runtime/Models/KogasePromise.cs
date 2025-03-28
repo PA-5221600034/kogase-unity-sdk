@@ -2,6 +2,7 @@ using System;
 
 namespace Kogase.Models
 {
+    // TODO: this is not completed yet, but it is a good start
     public class KogasePromise<TOkType, TErrorType>
     {
         Action<TOkType> okDelegates;
