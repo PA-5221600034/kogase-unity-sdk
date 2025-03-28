@@ -3,11 +3,11 @@
     internal interface ICacheImpl<TFileType>
     {
         /**
-	    * @brief Check if the class stores an item with specified key
-	    *
-	    * @param key Identifier of the data
-	    * @return True if the key is found
-	    */
+        * @brief Check if the class stores an item with specified key
+        *
+        * @param key Identifier of the data
+        * @return True if the key is found
+        */
         bool Contains(string key);
 
         /**

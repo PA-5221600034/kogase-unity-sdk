@@ -10,9 +10,7 @@ namespace Kogase.Utils.Infoware
         {
             string uniqueIdentifier;
             if (SystemInfo.deviceUniqueIdentifier != SystemInfo.unsupportedIdentifier)
-            {
                 throw new Exception("Unable to retrieve device id from this device");
-            }
 
             uniqueIdentifier = SystemInfo.deviceUniqueIdentifier;
             if (string.IsNullOrEmpty(uniqueIdentifier))

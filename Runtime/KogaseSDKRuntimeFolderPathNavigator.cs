@@ -1,1 +1,6 @@
-namespace Kogase { public class KogaseSDKRuntimeFolderPathNavigator { } }
+namespace Kogase
+{
+    public class KogaseSDKRuntimeFolderPathNavigator
+    {
+    }
+}

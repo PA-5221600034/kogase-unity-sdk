@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Serialization;
+
 namespace Kogase.Models
 {
     /// <summary>
@@ -42,7 +43,7 @@ namespace Kogase.Models
         /// Whether to automatically cache events when offline and send when back online
         /// </summary>
         public bool EnableOfflineCache = true;
-        
+
         public string GetBackendUrl()
         {
             return $"{BaseUrl}/api/{ApiVersion}";
@@ -56,14 +57,14 @@ namespace Kogase.Models
         {
             return new KogaseConfig
             {
-                BaseUrl = this.BaseUrl,
-                ApiKey = this.ApiKey,
-                ApiVersion = this.ApiVersion,
-                MaxCachedEvents = this.MaxCachedEvents,
-                EnableDebugLogging = this.EnableDebugLogging,
-                AutoTrackSessions = this.AutoTrackSessions,
-                EnableOfflineCache = this.EnableOfflineCache,
+                BaseUrl = BaseUrl,
+                ApiKey = ApiKey,
+                ApiVersion = ApiVersion,
+                MaxCachedEvents = MaxCachedEvents,
+                EnableDebugLogging = EnableDebugLogging,
+                AutoTrackSessions = AutoTrackSessions,
+                EnableOfflineCache = EnableOfflineCache
             };
         }
     }
-} 
+}

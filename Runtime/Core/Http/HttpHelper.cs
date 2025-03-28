@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+
 namespace Kogase.Core
 {
     internal static class HttpHelper

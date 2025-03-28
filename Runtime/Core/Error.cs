@@ -20,7 +20,7 @@ namespace Kogase.Core
             return new Error(code, message, messageVariables, this);
         }
 
-        private string GetDefaultErrorMessage()
+        string GetDefaultErrorMessage()
         {
             switch (Code)
             {
@@ -39,36 +39,38 @@ namespace Kogase.Core
                 case ErrorCode.NOT_FOUND:
                     return "The server has not found anything matching the Request-URI.";
                 case ErrorCode.METHOD_NOT_ALLOWED:
-                    return "The method specified in the Request-Line is not allowed for the resource identified by the " +
-                            "Request-URI.";
+                    return
+                        "The method specified in the Request-Line is not allowed for the resource identified by the " +
+                        "Request-URI.";
                 case ErrorCode.NOT_ACCEPTABLE:
                     return "The resource identified by the request can not generate content according to the accept " +
-                            "headers sent in the request.";
+                           "headers sent in the request.";
                 case ErrorCode.PROXY_AUTHENTICATION_REQUIRED:
                     return "The request requires user authentication via proxy.";
                 case ErrorCode.REQUEST_TIMEOUT:
                     return "The client did not produce a request within the time that the server was prepared to wait.";
                 case ErrorCode.CONFLICT:
-                    return "The request could not be completed due to a conflict with the current state of the resource.";
+                    return
+                        "The request could not be completed due to a conflict with the current state of the resource.";
                 case ErrorCode.GONE:
                     return "The requested resource is no longer available at the server and no forwarding address is " +
-                            "known.";
+                           "known.";
                 case ErrorCode.LENGTH_REQUIRED:
                     return "The server refuses to accept the request without a defined Content-Length.";
                 case ErrorCode.PRECONDITION_FAILED:
                     return "The precondition given in one or more of the request-header fields evaluated to false " +
-                            "when it was tested on the server.";
+                           "when it was tested on the server.";
                 case ErrorCode.REQUEST_ENTITY_TOO_LARGE:
                     return "The request entity is larger than the server is willing or able to process.";
                 case ErrorCode.REQUEST_URI_TOO_LONG:
                     return "The Request-URI is longer than the server is willing to interpret.";
                 case ErrorCode.UNSUPPORTED_MEDIA_TYPE:
                     return "The entity of the request is in a format not supported by the requested resource for " +
-                            "the requested method.";
+                           "the requested method.";
                 case ErrorCode.REQUESTED_RANGE_NOT_SATISFIABLE:
                     return "The request included a Range request-header field but none of the range-specifier " +
-                            "values in this field overlap the current extent of the selected resource, and the " +
-                            "request did not include an If-Range request-header field.";
+                           "values in this field overlap the current extent of the selected resource, and the " +
+                           "request did not include an If-Range request-header field.";
                 case ErrorCode.EXPECTATION_FAILED:
                     return "The expectation given in an Expect request-header field could not be met by this server.";
                 case ErrorCode.UNPROCESSABLE_ENTITY:
@@ -81,18 +83,19 @@ namespace Kogase.Core
                     return "The gateway or proxy received an invalid response from the upstream server.";
                 case ErrorCode.SERVICE_UNAVAILABLE:
                     return "The server is currently unable to handle the request due to a temporary overloading or " +
-                            "maintenance of the server.";
+                           "maintenance of the server.";
                 case ErrorCode.GATEWAY_TIMEOUT:
                     return "The gateway or proxy, did not receive a timely response from the upstream server.";
                 case ErrorCode.HTTP_VERSION_NOT_SUPPORTED:
-                    return "The server does not support the HTTP protocol version that was used in the request message.";
+                    return
+                        "The server does not support the HTTP protocol version that was used in the request message.";
                 default:
                     return "Unknown error: " + Code.ToString("G");
             }
         }
     }
-    
-        public enum ErrorCode
+
+    public enum ErrorCode
     {
         NONE = 0,
         CONTINUE = 100,
@@ -181,6 +184,6 @@ namespace Kogase.Core
         CACHED_TOKEN_NOT_FOUND = 14301,
         UNABLE_TO_SERIALIZE_DESERIALIZE_CACHED_TOKEN = 14302,
         CACHED_TOKEN_EXPIRED = 14303,
-        DEPRECATED = 14901,
+        DEPRECATED = 14901
     }
 }

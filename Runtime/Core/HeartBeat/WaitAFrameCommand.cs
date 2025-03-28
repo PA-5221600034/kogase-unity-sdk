@@ -8,7 +8,7 @@ namespace Kogase.Core
         public WaitAFrameCommand(Action onDone, CancellationToken cancellationToken) : base(onDone, cancellationToken)
         {
         }
-        
+
         public override bool Update(float dt)
         {
             return true;

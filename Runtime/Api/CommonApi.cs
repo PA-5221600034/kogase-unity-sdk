@@ -10,7 +10,9 @@ namespace Kogase.Api
     public class CommonApi : ApiBase
     {
         public CommonApi(IHttpClient inHttpClient, KogaseConfig inConfig)
-            : base(inHttpClient, inConfig) { }
+            : base(inHttpClient, inConfig)
+        {
+        }
 
         #region Project Management
 
@@ -27,13 +29,13 @@ namespace Kogase.Api
 
             IHttpResponse response = null;
 
-            yield return HttpClient.SendRequest(request, 
+            yield return HttpClient.SendRequest(request,
                 rsp => response = rsp);
 
             // var result = response.TryParseJson<>();
             // callback?.Try(result);
         }
-        
+
         #endregion Project Management
     }
 }

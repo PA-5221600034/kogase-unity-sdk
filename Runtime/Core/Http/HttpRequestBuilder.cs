@@ -23,7 +23,7 @@ namespace Kogase.Core
         readonly StringBuilder formBuilder = new(1024);
         readonly StringBuilder queryBuilder = new(256);
         readonly StringBuilder urlBuilder = new(256);
-        Dictionary<string, string> additionalData = new();
+        readonly Dictionary<string, string> additionalData = new();
         HttpRequest result;
 
         static HttpRequestBuilder CreatePrototype(string method, string url)
@@ -190,25 +190,24 @@ namespace Kogase.Core
             result.Headers["cookie"] = "device-token=" + deviceProvider.Identifier;
             return this;
         }
-        
+
         public HttpRequestBuilder WithBasicAuthWithCookieAndAuthTrustId(string encodeKey, string authTrustId = null)
         {
-            return WithBasicAuthWithCookieAndAuthTrustId(encodeKey, identifierGeneratorConfig: null, authTrustId: authTrustId);
+            return WithBasicAuthWithCookieAndAuthTrustId(encodeKey, null, authTrustId);
         }
-        
-        internal HttpRequestBuilder WithBasicAuthWithCookieAndAuthTrustId(string encodeKey, Models.IdentifierGeneratorConfig identifierGeneratorConfig, string authTrustId)
+
+        internal HttpRequestBuilder WithBasicAuthWithCookieAndAuthTrustId(string encodeKey,
+            Models.IdentifierGeneratorConfig identifierGeneratorConfig, string authTrustId)
         {
-            this.result.AuthType = HttpAuthType.BASIC;
-            DeviceProvider deviceProvider = DeviceProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
-            this.result.Headers["cookie"] = "device-token=" + deviceProvider.Identifier;
-            if (!string.IsNullOrEmpty(authTrustId))
-            {
-                this.result.Headers["Auth-Trust-Id"] = authTrustId;
-            }
+            result.AuthType = HttpAuthType.BASIC;
+            var deviceProvider =
+                DeviceProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
+            result.Headers["cookie"] = "device-token=" + deviceProvider.Identifier;
+            if (!string.IsNullOrEmpty(authTrustId)) result.Headers["Auth-Trust-Id"] = authTrustId;
 
             return this;
         }
-        
+
         public HttpRequestBuilder WithApiKeyAuth()
         {
             result.AuthType = HttpAuthType.API_KEY;
@@ -219,11 +218,9 @@ namespace Kogase.Core
         public HttpRequestBuilder WithBasicAuth(string username, string password, bool passwordIsRequired = true)
         {
             if (string.IsNullOrEmpty(username) || (passwordIsRequired && string.IsNullOrEmpty(password)))
-            {
                 throw new ArgumentException("username and password for Basic Authorization shouldn't be empty or null");
-            }
-            
-            string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(username + ":" + password));
+
+            var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(username + ":" + password));
             result.Headers["Authorization"] = "Basic " + credentials;
             result.AuthType = HttpAuthType.BASIC;
 
@@ -232,7 +229,7 @@ namespace Kogase.Core
 
         public HttpRequestBuilder WithBearerAuth()
         {
-            this.result.AuthType = HttpAuthType.BEARER;
+            result.AuthType = HttpAuthType.BEARER;
 
             return this;
         }
@@ -240,33 +237,31 @@ namespace Kogase.Core
         public HttpRequestBuilder WithBearerAuth(string token)
         {
             if (string.IsNullOrEmpty(token))
-            {
                 throw new ArgumentException("token for Bearer Authorization shouldn't be empty or null");
-            }
-            
-            this.result.Headers["Authorization"] = "Bearer " + token;
-            this.result.AuthType = HttpAuthType.BEARER;
+
+            result.Headers["Authorization"] = "Bearer " + token;
+            result.AuthType = HttpAuthType.BEARER;
 
             return this;
         }
 
         public HttpRequestBuilder WithContentType(MediaType mediaType)
         {
-            this.result.Headers["Content-Type"] = mediaType.ToString();
+            result.Headers["Content-Type"] = mediaType.ToString();
 
             return this;
         }
 
         public HttpRequestBuilder WithContentType(string rawMediaType)
         {
-            this.result.Headers["Content-Type"] = rawMediaType;
+            result.Headers["Content-Type"] = rawMediaType;
 
             return this;
         }
 
         public HttpRequestBuilder Accepts(MediaType mediaType)
         {
-            this.result.Headers["Accept"] = mediaType.ToString();
+            result.Headers["Accept"] = mediaType.ToString();
 
             return this;
         }
@@ -285,17 +280,14 @@ namespace Kogase.Core
             Assert.IsNotNull(value, $"form value is null for key {key}");
 
             if (string.IsNullOrEmpty(value)) return this;
-            
-            if (this.formBuilder.Length > 0)
-            {
-                this.formBuilder.Append("&");
-            }
-                
-            this.formBuilder.Append($"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}");
+
+            if (formBuilder.Length > 0) formBuilder.Append("&");
+
+            formBuilder.Append($"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}");
 
             return this;
         }
-        
+
         /// <summary>
         /// Add/append to additionalData form field as to be included in the request. param key:val.
         /// </summary>
@@ -304,7 +296,6 @@ namespace Kogase.Core
         /// <returns></returns>
         public HttpRequestBuilder AddAdditionalData(string key, string value)
         {
-
             if (string.IsNullOrEmpty(key))
             {
                 Assert.IsNotNull(key, "Additional data key is null");
@@ -317,88 +308,74 @@ namespace Kogase.Core
                 return this;
             }
 
-            this.additionalData.Add(key, value);
+            additionalData.Add(key, value);
 
             return this;
         }
 
         public HttpRequestBuilder WithBody(string body)
         {
-            if (!this.result.Headers.ContainsKey("Content-Type"))
-            {
-                this.result.Headers.Add("Content-Type", MediaType.TextPlain.ToString());
-            }
-            
-            this.result.BodyBytes = Encoding.UTF8.GetBytes(body);
+            if (!result.Headers.ContainsKey("Content-Type"))
+                result.Headers.Add("Content-Type", MediaType.TextPlain.ToString());
+
+            result.BodyBytes = Encoding.UTF8.GetBytes(body);
 
             return this;
         }
-        
+
         public HttpRequestBuilder WithBody(byte[] body)
         {
-            if (!this.result.Headers.ContainsKey("Content-Type"))
-            {
-                this.result.Headers.Add("Content-Type", MediaType.ApplicationOctetStream.ToString());
-            }
-            
-            this.result.BodyBytes = body;
+            if (!result.Headers.ContainsKey("Content-Type"))
+                result.Headers.Add("Content-Type", MediaType.ApplicationOctetStream.ToString());
+
+            result.BodyBytes = body;
 
             return this;
         }
 
         public HttpRequestBuilder WithBody(FormDataContent body)
         {
-            if (!this.result.Headers.ContainsKey("Content-Type"))
-            {
-                this.result.Headers.Add("Content-Type", body.GetMediaType());
-            }
-            
-            this.result.BodyBytes = body.Get();
+            if (!result.Headers.ContainsKey("Content-Type")) result.Headers.Add("Content-Type", body.GetMediaType());
+
+            result.BodyBytes = body.Get();
 
             return this;
         }
 
         public HttpRequestBuilder WithFormBody<T>(T body)
         {
-            if (!this.result.Headers.ContainsKey("Content-Type"))
-            {
-                this.result.Headers.Add("Content-Type", MediaType.ApplicationForm.ToString());
-            }
+            if (!result.Headers.ContainsKey("Content-Type"))
+                result.Headers.Add("Content-Type", MediaType.ApplicationForm.ToString());
 
-            this.result.BodyBytes = Encoding.UTF8.GetBytes(body.ToForm());
+            result.BodyBytes = Encoding.UTF8.GetBytes(body.ToForm());
 
             return this;
         }
-        
+
         public HttpRequestBuilder WithJsonBody<T>(T body)
         {
-            if (!this.result.Headers.ContainsKey("Content-Type"))
-            {
-                this.result.Headers.Add("Content-Type", MediaType.ApplicationJson.ToString());
-            }
+            if (!result.Headers.ContainsKey("Content-Type"))
+                result.Headers.Add("Content-Type", MediaType.ApplicationJson.ToString());
 
-            this.result.BodyBytes = body.ToUtf8Json();
+            result.BodyBytes = body.ToUtf8Json();
 
             return this;
         }
-        
+
         public IHttpRequest GetResult()
         {
-            if (this.queryBuilder.Length > 0)
+            if (queryBuilder.Length > 0)
             {
-                this.urlBuilder.Append("?");
-                this.urlBuilder.Append(this.queryBuilder);
+                urlBuilder.Append("?");
+                urlBuilder.Append(queryBuilder);
             }
 
-            if (this.additionalData.Count > 0)
+            if (additionalData.Count > 0) WithFormParam("additionalData", additionalData.ToJsonString());
+
+            if (formBuilder.Length > 0)
             {
-                this.WithFormParam("additionalData", additionalData.ToJsonString());
-            }
-            
-            if (this.formBuilder.Length > 0)
-            {
-                this.result.Headers["Content-Type"] = MediaType.ApplicationForm.ToString();
-                this.result.BodyBytes = Encoding.UTF8.GetBytes(this.formBuilder.ToString());
+                result.Headers["Content-Type"] = MediaType.ApplicationForm.ToString();
+                result.BodyBytes = Encoding.UTF8.GetBytes(formBuilder.ToString());
             }
 
             // TODO: maybe add this later
@@ -411,9 +388,9 @@ namespace Kogase.Core
             //     this.result.Headers["SDK-Version"] = sdkVersion;
             // }
 
-            this.result.Url = this.urlBuilder.ToString();
+            result.Url = urlBuilder.ToString();
 
-            return this.result;
+            return result;
         }
 
         class HttpRequest : IHttpRequest

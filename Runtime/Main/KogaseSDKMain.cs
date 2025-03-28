@@ -7,10 +7,11 @@ namespace Kogase
     public static class KogaseSDKMain
     {
         static bool _isInitialized;
-        
+
         static IMonoBehaviourSignaller _monoBehaviourSignaller;
-        
+
         static System.Action<float> _onUpdate;
+
         internal static System.Action<float> OnUpdate
         {
             get
@@ -24,14 +25,14 @@ namespace Kogase
                 _onUpdate = value;
             }
         }
-        
+
         internal static System.Action OnSDKStopped;
-        
+
         static void ExecuteBootstraps()
         {
             SdkInterfaceBootstrap.Execute();
         }
-        
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         static void StartSDK()
         {
@@ -39,12 +40,12 @@ namespace Kogase
             // {
             //     Main = new PlatformMain();
             // }
-            
+
             // string newId = System.Guid.NewGuid().ToString();
             // FlightId = newId.Replace("-", string.Empty);
-            
+
             _onUpdate = null;
-            
+
             ExecuteBootstraps();
 
 #if UNITY_EDITOR
@@ -54,7 +55,7 @@ namespace Kogase
             Application.quitting += ApplicationQuitting;
 #endif
         }
-        
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void LateStartSDK()
         {
@@ -64,35 +65,32 @@ namespace Kogase
             // Main.Run();
             _isInitialized = true;
         }
-        
+
         static void StopSDK()
         {
             OnSDKStopped?.Invoke();
             SdkInterfaceBootstrap.Stop();
             DetachMonoBehaviourSignaller();
-            
+
             // Main.Stop();
             _isInitialized = false;
-            
+
             OnSDKStopped = null;
         }
-        
+
 #if UNITY_EDITOR
         static void EditorApplicationPlayModeStateChanged(UnityEditor.PlayModeStateChange newState)
         {
             if (newState != UnityEditor.PlayModeStateChange.ExitingPlayMode) return;
-            
+
             UnityEditor.EditorApplication.playModeStateChanged -= EditorApplicationPlayModeStateChanged;
             StopSDK();
         }
 #endif
-        
+
         static void AttachMonoBehaviourSignaller(IMonoBehaviourSignaller newSignaller)
         {
-            if(_monoBehaviourSignaller != null)
-            {
-                _monoBehaviourSignaller.OnUpdateSignal -= OnUpdateSignal;
-            }
+            if (_monoBehaviourSignaller != null) _monoBehaviourSignaller.OnUpdateSignal -= OnUpdateSignal;
 
             _monoBehaviourSignaller = newSignaller;
 
@@ -106,37 +104,29 @@ namespace Kogase
                 Debug.LogWarning("MonoBehaviourSignaller set to null.");
             }
         }
-        
+
         static void DetachMonoBehaviourSignaller()
         {
-            if (_monoBehaviourSignaller != null)
-            {
-                _monoBehaviourSignaller.OnUpdateSignal -= OnUpdateSignal;
-            }
+            if (_monoBehaviourSignaller != null) _monoBehaviourSignaller.OnUpdateSignal -= OnUpdateSignal;
 
             _monoBehaviourSignaller = null;
         }
-        
+
         static void EnsureMonoBehaviourSignallerExist()
         {
-            if(_monoBehaviourSignaller == null)
+            if (_monoBehaviourSignaller == null)
             {
-                GameObject signallerGameObject = Utils.KogaseGameObject.GetOrCreateGameObject();
+                var signallerGameObject = Utils.KogaseGameObject.GetOrCreateGameObject();
                 var signaller = signallerGameObject.GetComponent<MonoBehaviourSignaller>();
-                if(signaller == null)
-                {
-                    signaller = signallerGameObject.AddComponent<MonoBehaviourSignaller>();
-                }
+                if (signaller == null) signaller = signallerGameObject.AddComponent<MonoBehaviourSignaller>();
                 AttachMonoBehaviourSignaller(signaller);
             }
         }
-        
-        internal static void AddOnUpdateListener(System.Action<float> listener, bool ensureMonoBehaviourSignallerExist  = true)
+
+        internal static void AddOnUpdateListener(System.Action<float> listener,
+            bool ensureMonoBehaviourSignallerExist = true)
         {
-            if(ensureMonoBehaviourSignallerExist)
-            {
-                EnsureMonoBehaviourSignallerExist();
-            }
+            if (ensureMonoBehaviourSignallerExist) EnsureMonoBehaviourSignallerExist();
             _onUpdate += listener;
         }
 
@@ -144,12 +134,12 @@ namespace Kogase
         {
             _onUpdate -= listener;
         }
-        
+
         static void OnUpdateSignal(float deltaTime)
         {
             _onUpdate?.Invoke(deltaTime);
         }
-        
+
         static void ApplicationQuitting()
         {
             StopSDK();

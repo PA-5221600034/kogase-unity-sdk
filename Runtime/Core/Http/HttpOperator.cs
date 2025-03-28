@@ -1,15 +1,16 @@
+using System;
+using System.Text;
+using UnityEngine;
+
 namespace Kogase.Core
 {
     public abstract class HttpOperator
     {
-        public abstract IHttpClient HttpClient
-        {
-            get;
-        }
+        public abstract IHttpClient HttpClient { get; }
 
-        public abstract void SendRequest(IHttpRequest request, System.Action<IHttpResponse> response);
+        public abstract void SendRequest(IHttpRequest request, Action<IHttpResponse> response);
 
-        public abstract void SendRequest(IHttpRequest request, System.Action<IHttpResponse, Error> response);
+        public abstract void SendRequest(IHttpRequest request, Action<IHttpResponse, Error> response);
 
         public static HttpOperator CreateDefault(IHttpClient httpClient)
         {
@@ -25,45 +26,33 @@ namespace Kogase.Core
 
     public class HttpAsyncOperator : HttpOperator
     {
-        IHttpClient httpClient;
-        public override IHttpClient HttpClient
-        {
-            get
-            {
-                return httpClient;
-            }
-        }
+        readonly IHttpClient httpClient;
+        public override IHttpClient HttpClient => httpClient;
 
         public HttpAsyncOperator(IHttpClient httpClient)
         {
             this.httpClient = httpClient;
         }
 
-        public async override void SendRequest(IHttpRequest request, System.Action<IHttpResponse> response)
+        public override async void SendRequest(IHttpRequest request, Action<IHttpResponse> response)
         {
-            HttpSendResult result = await httpClient.SendRequestAsync(request);
+            var result = await httpClient.SendRequestAsync(request);
             response?.Invoke(result.CallbackResponse);
         }
 
-        public async override void SendRequest(IHttpRequest request, System.Action<IHttpResponse, Error> response)
+        public override async void SendRequest(IHttpRequest request, Action<IHttpResponse, Error> response)
         {
-            HttpSendResult result = await httpClient.SendRequestAsync(request);
+            var result = await httpClient.SendRequestAsync(request);
             response?.Invoke(result.CallbackResponse, result.CallbackError);
         }
     }
 
     public class HttpCoroutineOperator : HttpOperator
     {
-        IHttpClient httpClient;
-        CoroutineRunner runner;
+        readonly IHttpClient httpClient;
+        readonly CoroutineRunner runner;
 
-        public override IHttpClient HttpClient
-        {
-            get
-            {
-                return httpClient;
-            }
-        }
+        public override IHttpClient HttpClient => httpClient;
 
         public HttpCoroutineOperator(IHttpClient httpClient, CoroutineRunner runner)
         {
@@ -71,12 +60,12 @@ namespace Kogase.Core
             this.runner = runner;
         }
 
-        public override void SendRequest(IHttpRequest request, System.Action<IHttpResponse> response)
+        public override void SendRequest(IHttpRequest request, Action<IHttpResponse> response)
         {
             runner.Run(httpClient.SendRequest(request, response));
         }
 
-        public override void SendRequest(IHttpRequest request, System.Action<IHttpResponse, Error> response)
+        public override void SendRequest(IHttpRequest request, Action<IHttpResponse, Error> response)
         {
             runner.Run(httpClient.SendRequest(request, response));
         }

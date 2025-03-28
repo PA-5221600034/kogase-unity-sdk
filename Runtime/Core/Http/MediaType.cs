@@ -5,17 +5,22 @@ namespace Kogase.Core
     /// </summary>
     public sealed class MediaType
     {
-        private readonly string name;
+        readonly string name;
 
-        public static readonly MediaType ApplicationForm =
-            new MediaType("application/x-www-form-urlencoded; charset=utf-8");
+        public static readonly MediaType ApplicationForm = new("application/x-www-form-urlencoded; charset=utf-8");
 
-        public static readonly MediaType ApplicationJson = new MediaType("application/json; charset=utf-8");
-        public static readonly MediaType TextPlain = new MediaType("text/plain; charset=utf-8");
-        public static readonly MediaType ApplicationOctetStream = new MediaType("application/octet-stream; charset=utf-8");
+        public static readonly MediaType ApplicationJson = new("application/json; charset=utf-8");
+        public static readonly MediaType TextPlain = new("text/plain; charset=utf-8");
+        public static readonly MediaType ApplicationOctetStream = new("application/octet-stream; charset=utf-8");
 
-        private MediaType(string name) { this.name = name; }
+        MediaType(string name)
+        {
+            this.name = name;
+        }
 
-        public override string ToString() { return this.name; }
+        public override string ToString()
+        {
+            return name;
+        }
     }
-} 
+}

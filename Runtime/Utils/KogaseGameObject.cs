@@ -1,4 +1,5 @@
 using UnityEngine;
+
 namespace Kogase.Utils
 {
     internal static class KogaseGameObject
@@ -9,15 +10,9 @@ namespace Kogase.Utils
 
         internal static GameObject GetOrCreateGameObject()
         {
-            if(_sdkGameObject == null)
-            {
-                _sdkGameObject = GameObject.Find(SDKGameObjectName);
-            }
+            if (_sdkGameObject == null) _sdkGameObject = GameObject.Find(SDKGameObjectName);
 
-            if (_sdkGameObject == null)
-            {
-                _sdkGameObject = new GameObject(SDKGameObjectName);
-            }
+            if (_sdkGameObject == null) _sdkGameObject = new GameObject(SDKGameObjectName);
 
             return _sdkGameObject;
         }

@@ -5,7 +5,8 @@ using UnityEngine.Scripting;
 
 namespace Kogase.Utils
 {
-    [Preserve, DataContract]
+    [Preserve]
+    [DataContract]
     internal class ServiceLog
     {
         [DataMember(Name = "message_id")] public string MessageId;
@@ -15,28 +16,39 @@ namespace Kogase.Utils
         [DataMember(Name = "data")] public ServiceData Data;
     }
 
-    [Preserve, DataContract]
+    [Preserve]
+    [DataContract]
     internal abstract class ServiceData
     {
-        [DataMember(Name = "verb"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public string Verb;
-        [DataMember(Name = "url"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public string Url;
-        [DataMember(Name = "header"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public IDictionary<string,string> Header;
-        [DataMember(Name = "payload"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public object Payload;
+        [DataMember(Name = "verb")] [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string Verb;
+
+        [DataMember(Name = "url")] [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string Url;
+
+        [DataMember(Name = "header")] [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> Header;
+
+        [DataMember(Name = "payload")] [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public object Payload;
     }
-    
-    [Preserve, DataContract]
+
+    [Preserve]
+    [DataContract]
     internal class ServiceRequestData : ServiceData
     {
     }
 
-    [Preserve, DataContract]
+    [Preserve]
+    [DataContract]
     internal class ServiceResponseData : ServiceData
     {
         [DataMember(Name = "status")] public long Status;
         [DataMember(Name = "content_type")] public string ContentType = string.Empty;
     }
-    
-    [Preserve, DataContract]
+
+    [Preserve]
+    [DataContract]
     internal class WebsocketData : ServiceData
     {
     }
@@ -47,7 +59,7 @@ namespace Kogase.Utils
         SENDING,
         RECEIVING
     }
-    
+
     internal enum DataType
     {
         NONE,

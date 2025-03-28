@@ -50,7 +50,7 @@ namespace Kogase.Core
             }
         }
 
-        public DeviceProvider(string type, string identifier, string uniqueId) 
+        public DeviceProvider(string type, string identifier, string uniqueId)
             : this(type, identifier, uniqueId, false)
         {
         }
@@ -67,7 +67,7 @@ namespace Kogase.Core
         }
 
         public static DeviceProvider GetFromSystemInfo(
-            string encodeKey, 
+            string encodeKey,
             string generatedIdCacheFileDir = null,
             IFileStream fs = null,
             Models.IdentifierGeneratorConfig identifierGeneratorConfig = null
@@ -77,11 +77,11 @@ namespace Kogase.Core
             string platformUniqueIdentifier = null;
             bool isIdentifierGenerated = true;
 #else
-            bool randomizeUniqueIdentifier = identifierGeneratorConfig is { RandomizeIdentifier: true };
-            string platformUniqueIdentifier = !randomizeUniqueIdentifier 
-                ? GetIdentifier(encodeKey) 
+            var randomizeUniqueIdentifier = identifierGeneratorConfig is { RandomizeIdentifier: true };
+            var platformUniqueIdentifier = !randomizeUniqueIdentifier
+                ? GetIdentifier(encodeKey)
                 : null;
-            bool isIdentifierGenerated = string.IsNullOrEmpty(platformUniqueIdentifier);
+            var isIdentifierGenerated = string.IsNullOrEmpty(platformUniqueIdentifier);
 #endif
 
             if (isIdentifierGenerated)
@@ -107,21 +107,21 @@ namespace Kogase.Core
                 {
                     // logger?.LogWarning($"Unable to access device id cache, {exception.Message}");
 
-                    if (string.IsNullOrEmpty(platformUniqueIdentifier)) 
+                    if (string.IsNullOrEmpty(platformUniqueIdentifier))
                         platformUniqueIdentifier = GenerateIdentifier();
-                    
+
                     // logger?.LogVerbose($"Generate new device id: {platformUniqueIdentifier}");
                 }
 
-            string identifier = $"unity_{CommonInfo.DeviceType}_{GetPlatformName()}";
+            var identifier = $"unity_{CommonInfo.DeviceType}_{GetPlatformName()}";
 
-            DeviceProvider retval = new DeviceProvider(
+            var retval = new DeviceProvider(
                 "device",
                 identifier,
                 platformUniqueIdentifier,
                 isIdentifierGenerated
             );
-            
+
             return retval;
         }
 
@@ -131,7 +131,7 @@ namespace Kogase.Core
             {
                 if (string.IsNullOrEmpty(cacheFileDir))
                     cacheFileDir = DefaultCacheFileDir;
-                FileCacheImpl fileCache =
+                var fileCache =
                     new FileCacheImpl(cacheFileDir, fs);
                 fileCache.Emplace(CacheFileName, identifier);
             }
@@ -154,7 +154,7 @@ namespace Kogase.Core
                     case RuntimePlatform.OSXPlayer:
                     {
                         iware = new Utils.Infoware.MacOS();
-                        string macAddress = iware.GetMacAddress();
+                        var macAddress = iware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
                     }
@@ -162,7 +162,7 @@ namespace Kogase.Core
                     case RuntimePlatform.WindowsPlayer:
                     {
                         iware = new Utils.Infoware.Windows();
-                        string macAddress = iware.GetMacAddress();
+                        var macAddress = iware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
                     }
@@ -170,21 +170,21 @@ namespace Kogase.Core
                     case RuntimePlatform.LinuxPlayer:
                     {
                         iware = new Utils.Infoware.LinuxOS();
-                        string macAddress = iware.GetMacAddress();
+                        var macAddress = iware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
                     }
                     case RuntimePlatform.IPhonePlayer:
                     {
                         iware = new Utils.Infoware.IOS();
-                        string deviceId = iware.GetDeviceUniqueIdentifier();
+                        var deviceId = iware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(deviceId, encodeKey);
                         break;
                     }
                     case RuntimePlatform.Android:
                     {
                         iware = new Utils.Infoware.Android();
-                        string deviceId = iware.GetDeviceUniqueIdentifier();
+                        var deviceId = iware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(deviceId, encodeKey);
                         break;
                     }
@@ -207,8 +207,9 @@ namespace Kogase.Core
                     default:
                     {
                         iware = new Utils.Infoware.OtherOs();
-                        string uniqueIdentifier = iware.GetMacAddress();
-                        if (string.IsNullOrEmpty(uniqueIdentifier)) uniqueIdentifier = iware.GetDeviceUniqueIdentifier();
+                        var uniqueIdentifier = iware.GetMacAddress();
+                        if (string.IsNullOrEmpty(uniqueIdentifier))
+                            uniqueIdentifier = iware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(uniqueIdentifier, encodeKey);
                         break;
                     }

@@ -6,52 +6,55 @@ namespace Kogase.Core
 {
     public class FormDataContent
     {
-        private string boundary;
-        private MemoryStream stream;
-        private StreamWriter writer;
+        readonly string boundary;
+        readonly MemoryStream stream;
+        readonly StreamWriter writer;
 
         public FormDataContent()
         {
-            this.boundary = "-----------" + Guid.NewGuid().ToString().Replace("-", "");
-            this.stream = new MemoryStream();
-            this.writer = new StreamWriter(this.stream, Encoding.ASCII);
-            this.writer.Write("--{0}", this.boundary);
+            boundary = "-----------" + Guid.NewGuid().ToString().Replace("-", "");
+            stream = new MemoryStream();
+            writer = new StreamWriter(stream, Encoding.ASCII);
+            writer.Write("--{0}", boundary);
         }
 
         public FormDataContent Add(string filename, byte[] data)
         {
-            this.writer.Write(
+            writer.Write(
                 "\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{0}\"\r\nContent-Type: {1}\r\n\r\n",
                 filename,
                 "octet/stream");
 
-            this.writer.Flush();
+            writer.Flush();
 
-            this.writer.BaseStream.Write(data, 0, data.Length);
-            this.writer.Write("\r\n--{0}", this.boundary);
+            writer.BaseStream.Write(data, 0, data.Length);
+            writer.Write("\r\n--{0}", boundary);
 
             return this;
         }
 
         public FormDataContent Add(string name, string value)
         {
-            this.writer.Write("\r\nContent-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}", name, value);
+            writer.Write("\r\nContent-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}", name, value);
 
-            this.writer.Write("\r\n--{0}", this.boundary);
+            writer.Write("\r\n--{0}", boundary);
 
-            this.writer.Flush();
+            writer.Flush();
 
             return this;
         }
 
-        public string GetMediaType() { return "multipart/form-data; boundary=" + this.boundary; }
+        public string GetMediaType()
+        {
+            return "multipart/form-data; boundary=" + boundary;
+        }
 
         public byte[] Get()
         {
-            this.writer.Write("--\r\n");
-            this.writer.Flush();
+            writer.Write("--\r\n");
+            writer.Flush();
 
-            return this.stream.ToArray();
+            return stream.ToArray();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Kogase.Utils;
 using UnityEngine;
+
 namespace Kogase.Core
 {
     public class PlayerPrefsFileStream : IFileStream
@@ -16,7 +17,7 @@ namespace Kogase.Core
             var hasKey = PlayerPrefs.HasKey(cacheKey);
             if (!hasKey)
             {
-                saveDict = new();
+                saveDict = new Dictionary<string, string>();
             }
             else
             {
@@ -27,7 +28,7 @@ namespace Kogase.Core
                 }
                 catch (Exception)
                 {
-                    saveDict = new();
+                    saveDict = new Dictionary<string, string>();
                 }
             }
         }
@@ -40,22 +41,17 @@ namespace Kogase.Core
                 return;
             }
 
-            bool isDirectoryFound = false;
+            var isDirectoryFound = false;
             List<string> keys = new();
-            
-            foreach (var key in saveDict.Keys)
-            {
-                keys.Add(key);
-            }
-            
+
+            foreach (var key in saveDict.Keys) keys.Add(key);
+
             foreach (var key in keys)
-            {
                 if (key.StartsWith(directory))
                 {
                     isDirectoryFound = true;
                     saveDict.Remove(key);
                 }
-            }
 
             if (isDirectoryFound)
             {

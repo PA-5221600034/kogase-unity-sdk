@@ -12,14 +12,11 @@ namespace Kogase.Core
         HeartBeat heartBeat;
 
         static HashSet<string> _clearedCookiesUrl;
-        
+
         public HttpRequestSender(WebRequestScheduler httpTaskScheduler)
         {
             this.httpTaskScheduler = httpTaskScheduler;
-            if (_clearedCookiesUrl == null)
-            {
-                _clearedCookiesUrl = new HashSet<string>();
-            }
+            if (_clearedCookiesUrl == null) _clearedCookiesUrl = new HashSet<string>();
         }
 
         internal void SetHeartBeat(HeartBeat hb)
@@ -30,19 +27,17 @@ namespace Kogase.Core
 
         public void AddTask(IHttpRequest request, Action<HttpSendResult> callback, int timeoutMs, uint delayTimeMs = 0)
         {
-            WebRequestTask newScheduler = new WebRequestTask(request, timeoutMs, delayTimeMs)
+            var newScheduler = new WebRequestTask(request, timeoutMs, delayTimeMs)
             {
                 OnComplete = (sentWebRequest) =>
                 {
-                    HttpSendResult responseResult = ParseWebRequestResult(sentWebRequest);
+                    var responseResult = ParseWebRequestResult(sentWebRequest);
                     callback?.Invoke(responseResult);
                 }
             };
-            heartBeat.Wait(new WaitAFrameCommand(cancellationToken: new System.Threading.CancellationTokenSource().Token, onDone:
-                () =>
-                {
-                    httpTaskScheduler.ExecuteWebTask(newScheduler);
-                }));
+            heartBeat.Wait(new WaitAFrameCommand(
+                cancellationToken: new System.Threading.CancellationTokenSource().Token, onDone:
+                () => { httpTaskScheduler.ExecuteWebTask(newScheduler); }));
         }
 
         public void ClearTasks()
@@ -54,18 +49,15 @@ namespace Kogase.Core
         {
             ClearCookiesThreadSafe(uri);
         }
-        
+
         internal void ClearCookiesThreadSafe(Uri uri)
         {
             var retval = new KogasePromise<Error>();
-            string uriString = uri.ToString();
+            var uriString = uri.ToString();
 
             if (_clearedCookiesUrl.Contains(uriString) || string.IsNullOrEmpty(uriString))
-            {
-                retval.Resolve();                
-            }
+                retval.Resolve();
             else
-            {
                 try
                 {
                     if (heartBeat != null)
@@ -73,10 +65,7 @@ namespace Kogase.Core
                         heartBeat.Wait(new WaitAFrameCommand(
                             cancellationToken: new System.Threading.CancellationTokenSource().Token, onDone: () =>
                             {
-                                if (_clearedCookiesUrl.Add(uriString))
-                                {
-                                    UnityWebRequest.ClearCookieCache(uri);
-                                }
+                                if (_clearedCookiesUrl.Add(uriString)) UnityWebRequest.ClearCookieCache(uri);
 
                                 retval.Resolve();
                             }));
@@ -91,7 +80,6 @@ namespace Kogase.Core
                 {
                     retval.Reject(new Error(ErrorCode.ERROR_FROM_EXCEPTION, ex.Message));
                 }
-            }
         }
 
         HttpSendResult ParseWebRequestResult(KogaseWebRequest webRequest)
@@ -109,6 +97,7 @@ namespace Kogase.Core
                     callBackError = new Error(ErrorCode.NETWORK_ERROR);
                     break;
             }
+
             return new HttpSendResult(callBackResponse, callBackError);
         }
     }

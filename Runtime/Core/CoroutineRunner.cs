@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Kogase.Utils;
 using UnityEngine;
+
 namespace Kogase.Core
 {
     public class CoroutineRunner
@@ -15,24 +16,21 @@ namespace Kogase.Core
 
         public CoroutineRunner()
         {
-            GameObject sdkGameObject = KogaseGameObject.GetOrCreateGameObject();
+            var sdkGameObject = KogaseGameObject.GetOrCreateGameObject();
 
             monoBehaviour = sdkGameObject.GetComponent<DummyBehaviour>();
-            if(monoBehaviour == null)
-            {
-                monoBehaviour = sdkGameObject.AddComponent<DummyBehaviour>();
-            }
-			            
+            if (monoBehaviour == null) monoBehaviour = sdkGameObject.AddComponent<DummyBehaviour>();
+
             monoBehaviour.StartCoroutine(RunCallbacks());
         }
 
-        ~CoroutineRunner() 
-        { 
-            isRunning = false; 
+        ~CoroutineRunner()
+        {
+            isRunning = false;
         }
 
         public Coroutine Run(IEnumerator coroutine)
-        { 
+        {
             return monoBehaviour != null ? monoBehaviour.StartCoroutine(coroutine) : null;
         }
 
@@ -48,12 +46,12 @@ namespace Kogase.Core
                 callbacks.Enqueue(callback);
             }
         }
-        
+
         IEnumerator RunCallbacks()
         {
             while (isRunning)
             {
-                yield return new WaitUntil(() => this.callbacks.Count > 0);
+                yield return new WaitUntil(() => callbacks.Count > 0);
 
                 Action callback;
 

@@ -9,24 +9,24 @@ namespace Kogase
     internal class KogaseSDKImpl
     {
         CommonApi api;
-        
+
         HeartBeat heartBeat;
         HeartBeat HeartBeat => heartBeat ??= new HeartBeat();
-        
+
         public string Version => KogaseSettings.SDKVersion;
 
         readonly KogaseServiceTracker serviceTracker;
-        
+
         // TODO: maybe this not needed
         //
         internal Action<IHttpClient> OnHttpClientCreated;
         //
-        
+
         public KogaseSDKImpl()
         {
             serviceTracker = new KogaseServiceTracker();
-            KogaseServiceLogger serviceLogger = new KogaseServiceLogger();
-            
+            var serviceLogger = new KogaseServiceLogger();
+
             serviceTracker.OnNewRequestSentEvent += serviceLogger.LogServiceActivity;
             serviceTracker.OnNewResponseReceivedEvent += serviceLogger.LogServiceActivity;
             serviceTracker.OnSendingWebsocketRequestEvent += serviceLogger.LogServiceActivity;
@@ -35,7 +35,7 @@ namespace Kogase
 
         public KogaseConfig GetConfig()
         {
-            KogaseConfig retval = KogaseSettings.SDKConfig;
+            var retval = KogaseSettings.SDKConfig;
             retval = retval.Clone();
             return retval;
         }
@@ -43,55 +43,47 @@ namespace Kogase
         internal void Reset()
         {
             // TODO: Implement reset logic
-            
+
             if (heartBeat != null)
             {
                 heartBeat.Reset();
                 heartBeat = null;
             }
         }
-        
+
         #region File Stream
 
         IFileStream fileStream;
+
         internal IFileStream FileStream
         {
             get
             {
-                if (fileStream == null)
-                {
-                    fileStream = CreateFileStream();
-                }
+                if (fileStream == null) fileStream = CreateFileStream();
                 return fileStream;
             }
         }
-        
+
         public IFileStreamFactory FileStreamFactory;
 
         IFileStream CreateFileStream()
         {
-            IFileStreamFactory fileStreamFactory = FileStreamFactory ?? new FileStreamFactory();
-            
-            IFileStream createdFileStream = fileStreamFactory.CreateFileStream();
-            
-            KogaseSDKMain.OnUpdate += dt =>
-            {
-                createdFileStream.Pop();
-            };
-            
+            var fileStreamFactory = FileStreamFactory ?? new FileStreamFactory();
+
+            var createdFileStream = fileStreamFactory.CreateFileStream();
+
+            KogaseSDKMain.OnUpdate += dt => { createdFileStream.Pop(); };
+
             return createdFileStream;
         }
-        
+
         internal void DisposeFileStream()
         {
-            if(fileStream != null)
-            {
-                fileStream.Dispose();
-            }
+            if (fileStream != null) fileStream.Dispose();
         }
-        
+
         #endregion File Stream
-        
+
         #region HTTP
 
         IHttpRequestSenderFactory sdkHttpSenderFactory;
@@ -106,16 +98,14 @@ namespace Kogase
                     defaultHttpSender.OnWebRequestSchedulerCreated = serviceTracker.OnNewWebRequestSchedulerCreated;
                     sdkHttpSenderFactory = defaultHttpSender;
                 }
+
                 return sdkHttpSenderFactory;
             }
-            set
-            {
-                sdkHttpSenderFactory = value;
-            }
+            set => sdkHttpSenderFactory = value;
         }
-        
+
         #endregion HTTP
-        
+
         // /// <summary>
         // /// Queue for storing events when offline
         // /// </summary>

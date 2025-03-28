@@ -1,16 +1,16 @@
 {
-    "name": "Kogase.UnitySDK",
-    "rootNamespace": "Kogase",
-    "references": [
-        "Komutil.JsonPlayerPrefs"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": false,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "Kogase.UnitySDK",
+  "rootNamespace": "Kogase",
+  "references": [
+    "Komutil.JsonPlayerPrefs"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 } 

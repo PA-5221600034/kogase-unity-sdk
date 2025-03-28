@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace Kogase.Models
 {
     [Serializable]
@@ -6,7 +7,7 @@ namespace Kogase.Models
     {
         public string Ip;
     }
-    
+
     public abstract class IdentifierGeneratorConfig
     {
         public bool RandomizeIdentifier { get; } = false;

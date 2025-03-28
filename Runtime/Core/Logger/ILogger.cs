@@ -8,7 +8,7 @@ namespace Kogase.Core
 {
     public interface ILogger
     {
-        public void InvokeLog(LogType logType, object message, UnityEngine.Object context=null);
-        public void InvokeException(Exception exception, UnityEngine.Object context=null);
+        public void InvokeLog(LogType logType, object message, UnityEngine.Object context = null);
+        public void InvokeException(Exception exception, UnityEngine.Object context = null);
     }
 }

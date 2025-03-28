@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+
 namespace Kogase.Core
 {
     public static class DebugHelper
@@ -54,7 +55,8 @@ namespace Kogase.Core
 
         internal static UnityEngine.LogType ConvertKogaseLogTypeToUnityLogType(LogType logType)
         {
-            if (!Enum.TryParse(logType.ToString(), true, out UnityEngine.LogType unityLogType)) unityLogType = UnityEngine.LogType.Log;
+            if (!Enum.TryParse(logType.ToString(), true, out UnityEngine.LogType unityLogType))
+                unityLogType = UnityEngine.LogType.Log;
             return unityLogType;
         }
 

@@ -6,45 +6,23 @@ namespace Kogase.Core
     internal class WebRequestTask
     {
         public readonly int TimeoutMs;
-        public IHttpRequest HttpRequest
-        {
-            get;
-            private set;
-        }
+        public IHttpRequest HttpRequest { get; private set; }
 
-        public System.Action<KogaseWebRequest> OnComplete;
+        public Action<KogaseWebRequest> OnComplete;
 
-        public uint DelayMs
-        {
-            get;
-            private set;
-        }
+        public uint DelayMs { get; private set; }
 
-        public int Priority
-        {
-            get
-            {
-                return HttpRequest.Priority;
-            }
-        }
+        public int Priority => HttpRequest.Priority;
 
-        public DateTime CreatedTimestamp
-        {
-            get;
-            private set;
-        }
+        public DateTime CreatedTimestamp { get; private set; }
 
-        public WebRequestState State
-        {
-            get;
-            private set;
-        }
+        public WebRequestState State { get; private set; }
 
         public WebRequestTask(IHttpRequest httpRequest, int timeoutMs, uint delayMs)
         {
             HttpRequest = httpRequest;
             DelayMs = delayMs;
-            this.TimeoutMs = timeoutMs;
+            TimeoutMs = timeoutMs;
             CreatedTimestamp = DateTime.UtcNow;
             SetState(WebRequestState.WAITING);
         }
@@ -62,7 +40,7 @@ namespace Kogase.Core
 
         public KogaseWebRequest CreateWebRequest()
         {
-            KogaseWebRequest unityWebRequest = HttpRequest.GetUnityWebRequest();
+            var unityWebRequest = HttpRequest.GetUnityWebRequest();
             return unityWebRequest;
         }
     }
@@ -72,22 +50,12 @@ namespace Kogase.Core
         public int Compare(WebRequestTask task1, WebRequestTask task2)
         {
             if (task1.Priority < task2.Priority)
-            {
                 return -1;
-            }
-            else if (task1.Priority > task2.Priority)
-            {
-                return 1;
-            }
+            else if (task1.Priority > task2.Priority) return 1;
 
             if (task1.CreatedTimestamp < task2.CreatedTimestamp)
-            {
                 return -1;
-            }
-            else if (task1.CreatedTimestamp > task2.CreatedTimestamp)
-            {
-                return 1;
-            }
+            else if (task1.CreatedTimestamp > task2.CreatedTimestamp) return 1;
 
             return 0;
         }

@@ -1,6 +1,7 @@
 using Kogase.Core;
 using System;
 using UnityEngine;
+
 namespace Kogase.Utils.Infoware
 {
     public abstract class InfowareUtils
@@ -9,15 +10,12 @@ namespace Kogase.Utils.Infoware
         internal abstract string GetMacAddress();
     }
 
-    class OtherOs : InfowareUtils
+    internal class OtherOs : InfowareUtils
     {
         internal override string GetDeviceUniqueIdentifier()
         {
-            string uniqueIdentifier = SystemInfo.deviceUniqueIdentifier;
-            if(string.IsNullOrEmpty(uniqueIdentifier))
-            {
-                throw new Exception("Unable to retrieve device id");
-            }
+            var uniqueIdentifier = SystemInfo.deviceUniqueIdentifier;
+            if (string.IsNullOrEmpty(uniqueIdentifier)) throw new Exception("Unable to retrieve device id");
             return uniqueIdentifier;
         }
 

@@ -4,14 +4,15 @@ namespace Kogase.Core
 {
     internal class IndefiniteFixedUpdateLoopCommand : WaitCommand
     {
-        private System.Action<float> onUpdate;
-        
-        public IndefiniteFixedUpdateLoopCommand(System.Action<float> onUpdate, CancellationToken cancellationToken) : base(onDone: null, cancellationToken)
+        readonly System.Action<float> onUpdate;
+
+        public IndefiniteFixedUpdateLoopCommand(System.Action<float> onUpdate, CancellationToken cancellationToken) :
+            base(null, cancellationToken)
         {
             this.onUpdate = onUpdate;
             this.cancellationToken = cancellationToken;
         }
-        
+
         public override bool Update(float dt)
         {
             onUpdate?.Invoke(dt);

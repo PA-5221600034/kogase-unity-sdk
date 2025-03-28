@@ -156,7 +156,7 @@ namespace Kogase.Utils
         //     }
         //     return retval;
         // }
-        
+
         public static T GetValueFromJsonString<T>(this string jsonString, string key, T defaultValue = default)
         {
             if (string.IsNullOrWhiteSpace(jsonString))
@@ -167,24 +167,20 @@ namespace Kogase.Utils
                 var jObject = JObject.Parse(jsonString);
                 if (
                     !jObject.TryGetValue(
-                        key, 
-                        StringComparison.OrdinalIgnoreCase, 
+                        key,
+                        StringComparison.OrdinalIgnoreCase,
                         out var token
                     )
                 )
-                {
                     return defaultValue;
-                }
 
-                Type type = typeof(T);
-                Type underlyingType = Nullable.GetUnderlyingType(type);
-        
+                var type = typeof(T);
+                var underlyingType = Nullable.GetUnderlyingType(type);
+
                 if (underlyingType != null)
-                {
-                    return token.Type == JTokenType.Null 
-                        ? defaultValue 
+                    return token.Type == JTokenType.Null
+                        ? defaultValue
                         : (T)Convert.ChangeType(token.ToString(), underlyingType);
-                }
 
                 return token.ToObject<T>();
             }

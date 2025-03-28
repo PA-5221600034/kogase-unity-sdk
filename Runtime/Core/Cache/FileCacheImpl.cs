@@ -7,7 +7,7 @@ namespace Kogase.Core
     internal class FileCacheImpl : ICacheImpl<string>
     {
         const int ReadWriteAsyncWaitMs = 100;
-        
+
         readonly string cacheDirectory;
 
         readonly IFileStream fs;

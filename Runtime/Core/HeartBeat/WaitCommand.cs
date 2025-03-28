@@ -7,7 +7,7 @@ namespace Kogase.Core
         protected System.Action onDone;
         protected CancellationToken cancellationToken;
         public abstract bool Update(float dt);
-        
+
         public WaitCommand(System.Action onDone, CancellationToken cancellationToken)
         {
             this.onDone = onDone;

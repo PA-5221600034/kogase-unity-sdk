@@ -2,35 +2,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
+
 namespace Kogase.Core
 {
     public class Debugger : IDebugger
     {
-        private List<ILogger> loggers = new List<ILogger>();
+        readonly List<ILogger> loggers = new();
 
         internal LogType currentSeverity;
 
-        private Action<LogType, object, Object> onLog;
+        Action<LogType, object, Object> onLog;
 
-        private Action<Exception, Object> onException;
+        Action<Exception, Object> onException;
 
-        internal ILogger DefaultLogger
-        {
-            get;
-            private set;
-        }
+        internal ILogger DefaultLogger { get; private set; }
 
-        internal bool EnhancedLogEnabled
-        {
-            get;
-            private set;
-        }
+        internal bool EnhancedLogEnabled { get; private set; }
 
-        internal bool LogEnabled
-        {
-            get;
-            private set;
-        }
+        internal bool LogEnabled { get; private set; }
 
         internal Debugger()
         {
@@ -54,9 +43,9 @@ namespace Kogase.Core
             return EnhancedLogEnabled;
         }
 
-    public void SetEnableEnhancedLogging(bool enable)
+        public void SetEnableEnhancedLogging(bool enable)
         {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR 
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
             EnhancedLogEnabled = enable;
 #endif
         }
@@ -70,13 +59,10 @@ namespace Kogase.Core
         {
             currentSeverity = type;
         }
-        
+
         public void LogEnhancedService(object message)
         {
-            if (!EnhancedLogEnabled)
-            {
-                return;
-            }
+            if (!EnhancedLogEnabled) return;
             onLog?.Invoke(LogType.VERBOSE, message, null);
         }
 
@@ -122,23 +108,16 @@ namespace Kogase.Core
 
         public void LogException(Exception exception, Object context = null)
         {
-            if (onException == null || !FilterLogSeverity(currentSeverity, LogType.EXCEPTION) || !LogEnabled)
-            {
-                return;
-            }
+            if (onException == null || !FilterLogSeverity(currentSeverity, LogType.EXCEPTION) || !LogEnabled) return;
             onException?.Invoke(exception, context);
         }
 
         internal void SetLogWriter(ILogger newLogger = null)
         {
             if (newLogger != null)
-            {
                 SetLogWriters(new ILogger[] { newLogger });
-            }
             else
-            {
                 ClearLoggers();
-            }
         }
 
         internal void SetLogWriters(ILogger[] newLoggers)
@@ -155,14 +134,12 @@ namespace Kogase.Core
         internal void AddLogWriters(ILogger[] newLoggers)
         {
             foreach (var logger in newLoggers)
-            {
                 if (!loggers.Contains(logger))
                 {
                     onLog += logger.InvokeLog;
                     onException += logger.InvokeException;
                     loggers.Add(logger);
                 }
-            }
         }
 
         internal void RemoveLogger(ILogger loggerToRemove)
@@ -173,14 +150,12 @@ namespace Kogase.Core
         internal void RemoveLoggers(ILogger[] loggersToRemove)
         {
             foreach (var logger in loggersToRemove)
-            {
                 if (loggers.Contains(logger))
                 {
                     onLog -= logger.InvokeLog;
                     onException -= logger.InvokeException;
                     loggers.Remove(logger);
                 }
-            }
         }
 
         internal ILogger[] GetLoggers()
@@ -190,15 +165,15 @@ namespace Kogase.Core
 
         internal void SetFilterLogType(UnityEngine.LogType type)
         {
-            string unityLogTypeStr = type.ToString();
+            var unityLogTypeStr = type.ToString();
             if (!Enum.TryParse(unityLogTypeStr, true, out currentSeverity))
             {
                 currentSeverity = LogType.LOG;
-                throw new System.InvalidOperationException($"Failed assign Unity log severity type : {type}.");
+                throw new InvalidOperationException($"Failed assign Unity log severity type : {type}.");
             }
         }
 
-        private void ClearLoggers()
+        void ClearLoggers()
         {
             onLog = null;
             onException = null;
@@ -211,18 +186,15 @@ namespace Kogase.Core
         //  - Assert will display assert, error and exception log messages.
         //  - Error will display error and exception log messages.
         //  - Exception will display exception log messages.
-        private bool FilterLogSeverity(LogType activeSeverity, LogType logSeverity)
+        bool FilterLogSeverity(LogType activeSeverity, LogType logSeverity)
         {
             return logSeverity <= activeSeverity;
         }
 
-        private void InvokeLog(LogType logType, object message, bool forceLog, Object context = null)
+        void InvokeLog(LogType logType, object message, bool forceLog, Object context = null)
         {
-            bool isLogAccepted = FilterLogSeverity(currentSeverity, logType) || forceLog;
-            if (onLog == null || !isLogAccepted || !LogEnabled)
-            {
-                return;
-            }
+            var isLogAccepted = FilterLogSeverity(currentSeverity, logType) || forceLog;
+            if (onLog == null || !isLogAccepted || !LogEnabled) return;
             onLog?.Invoke(logType, message, context);
         }
     }
