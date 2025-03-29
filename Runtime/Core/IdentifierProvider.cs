@@ -8,7 +8,7 @@ using UnityEngine.Assertions;
 
 namespace Kogase.Core
 {
-    public class DeviceProvider
+    public class IdentifierProvider
     {
         public readonly string Type;
         public readonly string Identifier;
@@ -50,12 +50,12 @@ namespace Kogase.Core
             }
         }
 
-        public DeviceProvider(string type, string identifier, string uniqueId)
+        public IdentifierProvider(string type, string identifier, string uniqueId)
             : this(type, identifier, uniqueId, false)
         {
         }
 
-        internal DeviceProvider(string type, string identifier, string uniqueId, bool isGenerated)
+        internal IdentifierProvider(string type, string identifier, string uniqueId, bool isGenerated)
         {
             Assert.IsNotNull(identifier, "Identifier is null!");
             Assert.IsNotNull(type, "Type is null!");
@@ -66,7 +66,7 @@ namespace Kogase.Core
             IsGenerated = isGenerated;
         }
 
-        public static DeviceProvider GetFromSystemInfo(
+        public static IdentifierProvider GetFromSystemInfo(
             string encodeKey,
             string generatedIdCacheFileDir = null,
             IFileStream fs = null,
@@ -94,28 +94,32 @@ namespace Kogase.Core
                     if (fileCache.Contains(CacheFileName))
                     {
                         platformUniqueIdentifier = fileCache.Retrieve(CacheFileName);
+                        Debug.Log($"Retrieve cached device id: {platformUniqueIdentifier}");
                         // logger?.LogVerbose($"Retrieve cached device id: {platformUniqueIdentifier}");
                     }
                     else
                     {
                         platformUniqueIdentifier = GenerateIdentifier();
                         fileCache.Emplace(CacheFileName, platformUniqueIdentifier);
+                        Debug.Log($"Generate new device id: {platformUniqueIdentifier}");
                         // logger?.LogVerbose($"Generate new device id: {platformUniqueIdentifier}");
                     }
                 }
-                catch (Exception exception)
+                catch (Exception e)
                 {
+                    Debug.LogWarning($"Unable to access device id cache, {e.Message}");
                     // logger?.LogWarning($"Unable to access device id cache, {exception.Message}");
 
                     if (string.IsNullOrEmpty(platformUniqueIdentifier))
                         platformUniqueIdentifier = GenerateIdentifier();
 
+                    Debug.LogWarning($"Unable to access device id cache, {e.Message}");
                     // logger?.LogVerbose($"Generate new device id: {platformUniqueIdentifier}");
                 }
 
             var identifier = $"unity_{CommonInfo.DeviceType}_{GetPlatformName()}";
 
-            var retval = new DeviceProvider(
+            var retval = new IdentifierProvider(
                 "device",
                 identifier,
                 platformUniqueIdentifier,
@@ -135,15 +139,16 @@ namespace Kogase.Core
                     new FileCacheImpl(cacheFileDir, fs);
                 fileCache.Emplace(CacheFileName, identifier);
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
+                Debug.LogWarning($"Unable to access device id cache, {e.Message}");
                 // logger?.LogWarning($"Unable to cache device id, {exception.Message}");
             }
         }
 
         static string GetIdentifier(string encodeKey)
         {
-            Utils.Infoware.InfowareUtils iware;
+            Utils.Infoware.InfowareUtils inforware;
             string platformUniqueIdentifier;
 
             try
@@ -153,38 +158,38 @@ namespace Kogase.Core
                     case RuntimePlatform.OSXEditor:
                     case RuntimePlatform.OSXPlayer:
                     {
-                        iware = new Utils.Infoware.MacOS();
-                        var macAddress = iware.GetMacAddress();
+                        inforware = new Utils.Infoware.MacOS();
+                        var macAddress = inforware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
                     }
                     case RuntimePlatform.WindowsEditor:
                     case RuntimePlatform.WindowsPlayer:
                     {
-                        iware = new Utils.Infoware.Windows();
-                        var macAddress = iware.GetMacAddress();
+                        inforware = new Utils.Infoware.Windows();
+                        var macAddress = inforware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
                     }
                     case RuntimePlatform.LinuxEditor:
                     case RuntimePlatform.LinuxPlayer:
                     {
-                        iware = new Utils.Infoware.LinuxOS();
-                        var macAddress = iware.GetMacAddress();
+                        inforware = new Utils.Infoware.LinuxOS();
+                        var macAddress = inforware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
                     }
                     case RuntimePlatform.IPhonePlayer:
                     {
-                        iware = new Utils.Infoware.IOS();
-                        var deviceId = iware.GetDeviceUniqueIdentifier();
+                        inforware = new Utils.Infoware.IOS();
+                        var deviceId = inforware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(deviceId, encodeKey);
                         break;
                     }
                     case RuntimePlatform.Android:
                     {
-                        iware = new Utils.Infoware.Android();
-                        var deviceId = iware.GetDeviceUniqueIdentifier();
+                        inforware = new Utils.Infoware.Android();
+                        var deviceId = inforware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(deviceId, encodeKey);
                         break;
                     }
@@ -206,18 +211,19 @@ namespace Kogase.Core
                     }
                     default:
                     {
-                        iware = new Utils.Infoware.OtherOs();
-                        var uniqueIdentifier = iware.GetMacAddress();
+                        inforware = new Utils.Infoware.OtherOs();
+                        var uniqueIdentifier = inforware.GetMacAddress();
                         if (string.IsNullOrEmpty(uniqueIdentifier))
-                            uniqueIdentifier = iware.GetDeviceUniqueIdentifier();
+                            uniqueIdentifier = inforware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(uniqueIdentifier, encodeKey);
                         break;
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                // logger?.LogVerbose(ex.Message);
+                Debug.LogWarning($"Unable to get device id, {e.Message}");
+                // logger?.LogVerbose(e.Message);
                 platformUniqueIdentifier = null;
             }
 

@@ -16,7 +16,7 @@ namespace Kogase.Utils.Infoware
 
         internal override string GetMacAddress()
         {
-            return DeviceProvider.GetDeviceMacAddress();
+            return IdentifierProvider.GetDeviceMacAddress();
         }
     }
 
@@ -32,7 +32,7 @@ namespace Kogase.Utils.Infoware
 
         internal override string GetMacAddress()
         {
-            return DeviceProvider.GetDeviceMacAddress();
+            return IdentifierProvider.GetDeviceMacAddress();
         }
     }
 
@@ -48,7 +48,7 @@ namespace Kogase.Utils.Infoware
 
         internal override string GetMacAddress()
         {
-            return DeviceProvider.GetDeviceMacAddress();
+            return IdentifierProvider.GetDeviceMacAddress();
         }
     }
 }
