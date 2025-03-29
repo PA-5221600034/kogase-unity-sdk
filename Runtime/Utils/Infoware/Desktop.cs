@@ -2,9 +2,9 @@ using Kogase.Core;
 using System;
 using UnityEngine;
 
-namespace Kogase.Utils.Infoware
+namespace Kogase.Utils
 {
-    internal class Windows : InfowareUtils
+    internal class Windows : Infoware
     {
         internal override string GetDeviceUniqueIdentifier()
         {
@@ -20,7 +20,7 @@ namespace Kogase.Utils.Infoware
         }
     }
 
-    internal class LinuxOS : InfowareUtils
+    internal class LinuxOS : Infoware
     {
         internal override string GetDeviceUniqueIdentifier()
         {
@@ -36,7 +36,7 @@ namespace Kogase.Utils.Infoware
         }
     }
 
-    internal class MacOS : InfowareUtils
+    internal class MacOS : Infoware
     {
         internal override string GetDeviceUniqueIdentifier()
         {

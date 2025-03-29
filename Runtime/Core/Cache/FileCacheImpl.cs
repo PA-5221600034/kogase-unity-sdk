@@ -1,27 +1,29 @@
-﻿#if !UNITY_WEBGL
+﻿
+using System;
+using UnityEngine;
+#if !UNITY_WEBGL
 using System.Text;
 #endif
 
 namespace Kogase.Core
 {
-    internal class FileCacheImpl : ICacheImpl<string>
+    internal sealed class FileCacheImpl : ICacheImpl<string>
     {
         const int ReadWriteAsyncWaitMs = 100;
 
         readonly string cacheDirectory;
 
         readonly IFileStream fs;
-        readonly IDebugger logger;
 
-        public FileCacheImpl(string cacheDirectory, IFileStream fs = null, IDebugger logger = null)
+        public FileCacheImpl(string cacheDirectory, IFileStream fs = null)
         {
-            if (fs == null) fs = KogaseSDK.Implementation.FileStream;
+            fs ??= KogaseSDK.Implementation.FileStream;
 
             if (string.IsNullOrEmpty(cacheDirectory))
-                throw new System.InvalidOperationException("Cache directory is empty.");
+                throw new InvalidOperationException("Cache directory is empty.");
+            
             this.cacheDirectory = cacheDirectory;
             this.fs = fs;
-            this.logger = logger;
         }
 
         public bool Contains(string key)
@@ -31,43 +33,51 @@ namespace Kogase.Core
             return retval;
         }
 
-        public virtual bool Emplace(string key, string item)
+        public bool Emplace(string key, string item)
         {
             try
             {
                 var itemSavePath = GetFileFullPath(key);
                 fs.WriteFile(null, item, itemSavePath, null, true);
             }
-            catch (System.Exception ex)
+            catch (Exception e)
             {
-                logger?.LogWarning(ex.Message);
+                Debug.LogWarning($"Failed to emplace cache file: {item}.\n{e.Message}");
                 return false;
             }
 
             return true;
         }
 
-        public virtual async void EmplaceAsync(string key, string item, System.Action<bool> callback = null)
+        public async void EmplaceAsync(string key, string item, Action<bool> callback = null)
         {
-            var filePath = GetFileFullPath(key);
-            var writeSuccess = false;
-            while (!writeSuccess)
-                try
+            try
+            {
+                var filePath = GetFileFullPath(key);
+                var writeSuccess = false;
+                while (!writeSuccess)
                 {
-                    fs.WriteFileAsync(item, filePath, (success) => { writeSuccess = success; });
-                }
-                catch (System.Exception)
-                {
-                    await System.Threading.Tasks.Task.Delay(ReadWriteAsyncWaitMs);
+                    try
+                    {
+                        fs.WriteFileAsync(item, filePath, success => { writeSuccess = success; });
+                    }
+                    catch (Exception)
+                    {
+                        await System.Threading.Tasks.Task.Delay(ReadWriteAsyncWaitMs);
+                    }
                 }
 
-            callback?.Invoke(true);
+                callback?.Invoke(true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Failed to emplace cache file: {item}.\n{e.Message}");
+            }
         }
 
         public bool Update(string key, string item)
         {
-            if (!Contains(key)) return false;
-            return Emplace(key, item);
+            return Contains(key) && Emplace(key, item);
         }
 
         public void Empty()
@@ -76,13 +86,13 @@ namespace Kogase.Core
             {
                 fs.DeleteDirectory(cacheDirectory, null);
             }
-            catch (System.Exception exception)
+            catch (Exception e)
             {
-                logger?.LogWarning($"Failed to delete cache directory: {cacheDirectory}.\n{exception.Message}");
+                Debug.LogWarning($"Failed to delete cache directory: {cacheDirectory}.\n{e.Message}");
             }
         }
 
-        public virtual string Retrieve(string key)
+        public string Retrieve(string key)
         {
             var filePath = GetFileFullPath(key);
             string retval = null;
@@ -94,15 +104,15 @@ namespace Kogase.Core
                     if (isSucess) retval = (string)readResult;
                 });
             }
-            catch (System.Exception ex)
+            catch (Exception e)
             {
-                logger?.LogWarning(ex.Message);
+                Debug.LogWarning($"Failed to read cache file: {filePath}.\n{e.Message}");
             }
 
             return retval;
         }
 
-        public virtual void RetrieveAsync(string key, System.Action<string> callback)
+        public void RetrieveAsync(string key, Action<string> callback)
         {
             if (callback != null)
             {
@@ -119,14 +129,22 @@ namespace Kogase.Core
         public bool Remove(string key)
         {
             var result = false;
+            
             try
             {
                 var filePath = GetFileFullPath(key);
-                fs.DeleteFile(filePath, instantDelete: true, onDone: (isSuccess) => { result = isSuccess; });
+                fs.DeleteFile(
+                    filePath, 
+                    instantDelete: true, 
+                    onDone: isSuccess =>
+                    {
+                        result = isSuccess;
+                    }
+                );
             }
-            catch (System.Exception ex)
+            catch (Exception e)
             {
-                logger?.LogWarning($"Failed to delete cache file.\n{ex.Message}");
+                Debug.LogWarning($"Failed to delete cache file: {key}.\n{e.Message}");
             }
 
             return result;
@@ -134,8 +152,7 @@ namespace Kogase.Core
 
         string GetFileFullPath(string key)
         {
-            var retval = $"{cacheDirectory}/{key}";
-            return retval;
+            return $"{cacheDirectory}/{key}";
         }
     }
 }

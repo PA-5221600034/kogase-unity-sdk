@@ -15,7 +15,7 @@ namespace Kogase
             {
                 if (api != null) return api;
                 var config = KogaseSettings.SDKConfig;
-                api = new CommonApi(new KogaseHttpClient(), config);
+                // api = new CommonApi(new KogaseHttpClient(), config);
 
                 return api;
             }
@@ -26,17 +26,8 @@ namespace Kogase
 
         public string Version => KogaseSettings.SDKVersion;
 
-        readonly KogaseServiceTracker serviceTracker;
-
         public KogaseSDKImpl()
         {
-            serviceTracker = new KogaseServiceTracker();
-            var serviceLogger = new KogaseServiceLogger();
-
-            serviceTracker.OnNewRequestSentEvent += serviceLogger.LogServiceActivity;
-            serviceTracker.OnNewResponseReceivedEvent += serviceLogger.LogServiceActivity;
-            serviceTracker.OnSendingWebsocketRequestEvent += serviceLogger.LogServiceActivity;
-            serviceTracker.OnReceivingWebsocketNotificationEvent += serviceLogger.LogServiceActivity;
         }
 
         public KogaseConfig GetConfig()

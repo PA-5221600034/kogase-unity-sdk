@@ -1,10 +1,11 @@
+using Kogase.Utils;
 using System;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 using System.Text;
-using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine;
 
 namespace Kogase.Core
 {
@@ -20,13 +21,7 @@ namespace Kogase.Core
 #else
         static readonly string DefaultCacheFileDir = $"{CommonInfo.PersistentPath}/Kogase/";
 #endif
-        static readonly string CacheFileName = "MachineIdentifier";
-
-        static readonly char[] EligibleCharacters =
-        {
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-            'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-        };
+        static readonly string CacheFileName = "DeviceIdentifier";
 
         static System.Random _randomizer;
         static int _seed;
@@ -117,7 +112,7 @@ namespace Kogase.Core
                     // logger?.LogVerbose($"Generate new device id: {platformUniqueIdentifier}");
                 }
 
-            var identifier = $"unity_{CommonInfo.DeviceType}_{GetPlatformName()}";
+            var identifier = $"unity_{CommonInfo.DeviceType}_{CommonInfo.PlatformName}";
 
             var retval = new IdentifierProvider(
                 "device",
@@ -148,7 +143,7 @@ namespace Kogase.Core
 
         static string GetIdentifier(string encodeKey)
         {
-            Utils.Infoware.InfowareUtils inforware;
+            Infoware inforware;
             string platformUniqueIdentifier;
 
             try
@@ -158,7 +153,7 @@ namespace Kogase.Core
                     case RuntimePlatform.OSXEditor:
                     case RuntimePlatform.OSXPlayer:
                     {
-                        inforware = new Utils.Infoware.MacOS();
+                        inforware = new MacOS();
                         var macAddress = inforware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
@@ -166,7 +161,7 @@ namespace Kogase.Core
                     case RuntimePlatform.WindowsEditor:
                     case RuntimePlatform.WindowsPlayer:
                     {
-                        inforware = new Utils.Infoware.Windows();
+                        inforware = new Windows();
                         var macAddress = inforware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
@@ -174,21 +169,21 @@ namespace Kogase.Core
                     case RuntimePlatform.LinuxEditor:
                     case RuntimePlatform.LinuxPlayer:
                     {
-                        inforware = new Utils.Infoware.LinuxOS();
+                        inforware = new LinuxOS();
                         var macAddress = inforware.GetMacAddress();
                         platformUniqueIdentifier = EncodeHmac(macAddress, encodeKey);
                         break;
                     }
                     case RuntimePlatform.IPhonePlayer:
                     {
-                        inforware = new Utils.Infoware.IOS();
+                        inforware = new IOS();
                         var deviceId = inforware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(deviceId, encodeKey);
                         break;
                     }
                     case RuntimePlatform.Android:
                     {
-                        inforware = new Utils.Infoware.Android();
+                        inforware = new Android();
                         var deviceId = inforware.GetDeviceUniqueIdentifier();
                         platformUniqueIdentifier = EncodeHmac(deviceId, encodeKey);
                         break;
@@ -211,7 +206,7 @@ namespace Kogase.Core
                     }
                     default:
                     {
-                        inforware = new Utils.Infoware.OtherOs();
+                        inforware = new OtherOs();
                         var uniqueIdentifier = inforware.GetMacAddress();
                         if (string.IsNullOrEmpty(uniqueIdentifier))
                             uniqueIdentifier = inforware.GetDeviceUniqueIdentifier();
@@ -253,11 +248,6 @@ namespace Kogase.Core
             }
 #endif
             return macAddressArray;
-        }
-
-        internal static string GetPlatformName()
-        {
-            return CommonInfo.PlatformName;
         }
 
         static string GenerateIdentifier()

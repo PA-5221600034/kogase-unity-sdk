@@ -47,8 +47,7 @@ namespace Kogase.Utils
                     return reader.Value;
                 default:
                     throw new JsonSerializationException
-                    (string.Format("Unexpected token when converting IDictionary<string, object>: {0}",
-                        reader.TokenType));
+                    ($"Unexpected token when converting IDictionary<string, object>: {reader.TokenType}");
             }
         }
 

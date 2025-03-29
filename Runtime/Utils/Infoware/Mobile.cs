@@ -2,9 +2,9 @@ using Kogase.Core;
 using System;
 using UnityEngine;
 
-namespace Kogase.Utils.Infoware
+namespace Kogase.Utils
 {
-    internal class Android : InfowareUtils
+    internal class Android : Infoware
     {
         internal override string GetDeviceUniqueIdentifier()
         {
@@ -25,7 +25,7 @@ namespace Kogase.Utils.Infoware
         }
     }
 
-    internal class IOS : InfowareUtils
+    internal class IOS : Infoware
     {
         internal override string GetDeviceUniqueIdentifier()
         {
