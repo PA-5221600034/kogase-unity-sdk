@@ -1,6 +1,7 @@
 using Kogase.Models;
 using System;
 using System.IO;
+using Kogase.Dtos;
 using UnityEditor;
 using UnityEngine;
 namespace Kogase.Editor
@@ -18,10 +19,11 @@ namespace Kogase.Editor
         string configFilePath;
         KogaseConfig originalConfig;
         KogaseConfig editedConfig;
+        CreateProjectRequest createProjectRequest;
         Vector2 scrollPosition;
         bool isDirty;
         bool isInitialized;
-        bool isTestingConnection;
+        bool isDoingOperation;
         
         [MenuItem("Kogase/Edit Settings")]
         public static void OpenWindow()
@@ -31,7 +33,7 @@ namespace Kogase.Editor
                 _instance.CloseFinal();
             }
             
-            _instance = GetWindow<KogaseSettingsEditor>(KWindowTitle, true, Type.GetType("UnityEditor.InspectorWindow,UnityEditor.dll"));
+            _instance = GetWindow<KogaseSettingsEditor>(KWindowTitle, true, Type.GetType("UnityEditor.InspectorWindow, UnityEditor.dll"));
             _instance.Show();
         }
         
@@ -93,11 +95,14 @@ namespace Kogase.Editor
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal:false, alwaysShowVertical:false);
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUI.indentLevel++;
             
-            EditorGUILayout.LabelField("SDK Version");
-            EditorGUILayout.LabelField(KogaseSettings.SDKVersion);
-            EditorGUILayout.LabelField("");
+            
+            EditorGUILayout.LabelField(
+                $"SDK Version {KogaseSettings.SDKVersion}", 
+                new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter }
+            );
+            
+            EditorGUI.indentLevel++;
 
             string baseUrl = EditorGUILayout.TextField("Base URL", editedConfig.BaseUrl);
             if (baseUrl != editedConfig.BaseUrl)
@@ -150,29 +155,108 @@ namespace Kogase.Editor
 
             EditorGUI.indentLevel--;
 
-            using (new EditorGUI.DisabledGroupScope(isTestingConnection))
+            using (new EditorGUI.DisabledGroupScope(isDoingOperation))
             {
                 if (GUILayout.Button("Test Connection"))
                 {
-                    TestConnection(editedConfig);
+                    isDoingOperation = true;
+                    Repaint();
+
+                    KogaseSDK.TestConnection(
+                        ok =>
+                        {
+                            isDoingOperation = false;
+                            EditorUtility.DisplayDialog(
+                                "Test Connection", 
+                                "Connection successful!", 
+                                "OK"
+                            );
+                            Repaint();
+                        },
+                        error =>
+                        {
+                            isDoingOperation = false;
+                            EditorUtility.DisplayDialog(
+                                "Test Connection", 
+                                $"Connection failed: {error.Message}",
+                                "OK"
+                            );
+                            Repaint();
+                        }
+                    );
                 }
             }
 
-            if (isTestingConnection)
+            EditorGUILayout.EndVertical();
+            
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            
+            EditorGUILayout.LabelField(
+                "Create Project Here (optional)", 
+                new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter }
+            );
+            
+            EditorGUI.indentLevel++;
+            
+            string projectName = EditorGUILayout.TextField("Project Name", createProjectRequest.Name);
+            if (projectName != createProjectRequest.Name)
             {
-                EditorGUILayout.HelpBox("Testing connection...", MessageType.Info);
+                createProjectRequest.Name = projectName;
+                Repaint();
+            }
+            
+            EditorGUI.indentLevel--;
+            
+            using (new EditorGUI.DisabledGroupScope(isDoingOperation || string.IsNullOrEmpty(projectName)))
+            {
+                if (GUILayout.Button("Create Project"))
+                {
+                    isDoingOperation = true;
+                    Repaint();
+
+                    KogaseSDK.CreateProject(
+                        createProjectRequest,
+                        ok =>
+                        {
+                            isDoingOperation = false;
+                            EditorUtility.DisplayDialog(
+                                "Create Project", 
+                                "Project created successfully!", 
+                                "OK"
+                            );
+                            Debug.Log(ok.ApiKey);
+                            editedConfig.ApiKey = ok.ApiKey;
+                            Repaint();
+                        },
+                        error =>
+                        {
+                            isDoingOperation = false;
+                            EditorUtility.DisplayDialog(
+                                "Create Project", 
+                                $"Failed to create project: {error.Message}",
+                                "OK"
+                            );
+                            Repaint();
+                        }
+                    );
+                }
+            }
+            
+            EditorGUILayout.EndVertical();
+            
+            EditorGUILayout.EndScrollView();
+            
+            EditorGUILayout.EndVertical();
+            
+            if (isDoingOperation)
+            {
+                EditorGUILayout.HelpBox("Wait for a minute...", MessageType.Info);
             }
             
             if (isDirty)
             {
                 EditorGUILayout.HelpBox("You have unsaved changes", MessageType.Warning);
             }
-
-            EditorGUILayout.EndVertical();
-            
-            EditorGUILayout.EndScrollView();
-            
-            EditorGUILayout.EndVertical();
             
             if (GUILayout.Button("Reset"))
             {
@@ -184,27 +268,6 @@ namespace Kogase.Editor
             {
                 SaveConfig();
             }
-        }
-        
-        void TestConnection(KogaseConfig config)
-        {
-            isTestingConnection = true;
-            Repaint();
-
-            // KogaseSDK.Instance.IAM.TestConnection(config,
-            //     result =>
-            //     {
-            //         isTestingConnection = false;
-            //         EditorUtility.DisplayDialog("Test Connection", "Connection successful!", "OK");
-            //         Repaint();
-            //     },
-            //     error =>
-            //     {
-            //         isTestingConnection = false;
-            //         EditorUtility.DisplayDialog("Test Connection", $"Connection failed: {error.message}", "OK");
-            //         Repaint();
-            //     }
-            // );
         }
 
         void ResetConfig()

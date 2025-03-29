@@ -1,3 +1,4 @@
+using System;
 using Kogase.Bootstrap;
 using Kogase.Core;
 using UnityEngine;
@@ -10,9 +11,9 @@ namespace Kogase
 
         static IMonoBehaviourSignaller _monoBehaviourSignaller;
 
-        static System.Action<float> _onUpdate;
+        static Action<float> _onUpdate;
 
-        internal static System.Action<float> OnUpdate
+        internal static Action<float> OnUpdate
         {
             get
             {
@@ -26,7 +27,7 @@ namespace Kogase
             }
         }
 
-        internal static System.Action OnSDKStopped;
+        internal static Action OnSDKStopped;
 
         static void ExecuteBootstraps()
         {
@@ -123,14 +124,14 @@ namespace Kogase
             }
         }
 
-        internal static void AddOnUpdateListener(System.Action<float> listener,
+        internal static void AddOnUpdateListener(Action<float> listener,
             bool ensureMonoBehaviourSignallerExist = true)
         {
             if (ensureMonoBehaviourSignallerExist) EnsureMonoBehaviourSignallerExist();
             _onUpdate += listener;
         }
 
-        internal static void RemoveOnUpdateListener(System.Action<float> listener)
+        internal static void RemoveOnUpdateListener(Action<float> listener)
         {
             _onUpdate -= listener;
         }

@@ -14,7 +14,7 @@ namespace Kogase.Core
         void AddAdditionalHeaderInfo(string headerKey, string headerValue);
         void SetImplicitPathParams(IDictionary<string, string> pathParams);
         void ClearImplicitPathParams();
-        void SetBaseUrl(Uri baseUrl);
+        void SetBaseUri(Uri baseUrl);
         void ClearCookies();
     }
 }

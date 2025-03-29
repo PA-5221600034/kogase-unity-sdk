@@ -1,4 +1,5 @@
 using Kogase.Core;
+using Kogase.Dtos;
 
 namespace Kogase
 {
@@ -16,5 +17,15 @@ namespace Kogase
         }
 
         public static string Version => Implementation.Version;
+        
+        public static void TestConnection(OkDelegate<HealthResponse> okCallback = null, ErrorDelegate<Error> errorCallback = null)
+        {
+            Implementation.Api.TestConnection(okCallback, errorCallback);
+        }
+        
+        public static void CreateProject(CreateProjectRequest payload, OkDelegate<CreateProjectResponse> okCallback = null, ErrorDelegate<Error> errorCallback = null)
+        {
+            Implementation.Api.CreateProject(payload, okCallback, errorCallback);
+        }
     }
 }

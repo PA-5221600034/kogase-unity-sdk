@@ -15,7 +15,7 @@ namespace Kogase.Core
     /// <summary>
     /// Client for executing HTTP requests
     /// </summary>
-    public class HttpClient
+    public class KogaseHttpClient : IHttpClient
     {
         internal const string ApiKeyHeaderKey = "X-Kogase-API-Key";
 
@@ -38,7 +38,7 @@ namespace Kogase.Core
 
         IDebugger logger;
 
-        public HttpClient(IHttpRequestSender requestSender = null, IDebugger logger = null)
+        public KogaseHttpClient(IHttpRequestSender requestSender = null, IDebugger logger = null)
         {
             SetLogger(logger);
             if (requestSender != null)

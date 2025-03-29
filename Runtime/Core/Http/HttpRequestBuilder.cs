@@ -186,7 +186,7 @@ namespace Kogase.Core
         {
             result.AuthType = HttpAuthType.BASIC;
             var deviceProvider =
-                DeviceProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
+                IdentifierProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
             result.Headers["cookie"] = "device-token=" + deviceProvider.Identifier;
             return this;
         }
@@ -201,7 +201,7 @@ namespace Kogase.Core
         {
             result.AuthType = HttpAuthType.BASIC;
             var deviceProvider =
-                DeviceProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
+                IdentifierProvider.GetFromSystemInfo(encodeKey, identifierGeneratorConfig: identifierGeneratorConfig);
             result.Headers["cookie"] = "device-token=" + deviceProvider.Identifier;
             if (!string.IsNullOrEmpty(authTrustId)) result.Headers["Auth-Trust-Id"] = authTrustId;
 

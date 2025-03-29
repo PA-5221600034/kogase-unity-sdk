@@ -21,7 +21,7 @@ namespace Kogase.Core
 
             httpClient = inHttpClient;
             Config = inConfig;
-            HttpOperator = inHttpOperator != null ? inHttpOperator : HttpOperator.CreateDefault(inHttpClient);
+            HttpOperator = inHttpOperator ?? HttpOperator.CreateDefault(inHttpClient);
 
             BaseUrl = inConfig.GetBackendUrl();
         }
