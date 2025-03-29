@@ -1,25 +1,27 @@
 using System;
+using System.Runtime.Serialization;
+using UnityEngine.Scripting;
 
 namespace Kogase.Dtos
 {
-    [Serializable]
+    [DataContract, Preserve]
     public class HealthResponse
     {
-        public string Status { get; set; }
+        [DataMember(Name = "status")] public string Status { get; set; }
     }
     
-    [Serializable]
+    [DataContract, Preserve]
     public class CreateProjectRequest
     {
-        public string Name { get; set; }
+        [DataMember(Name = "name")] public string Name { get; set; }
     }
 
-    [Serializable]
+    [DataContract, Preserve]
     public class CreateProjectResponse
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string ApiKey { get; set; }
-        public Guid OwnerId { get; set; }
+        [DataMember(Name = "id")] public Guid Id { get; set; }
+        [DataMember(Name = "name")] public string Name { get; set; }
+        [DataMember(Name = "api_key")] public string ApiKey { get; set; }
+        [DataMember(Name = "owner_id")] public Guid OwnerId { get; set; }
     }
 }
