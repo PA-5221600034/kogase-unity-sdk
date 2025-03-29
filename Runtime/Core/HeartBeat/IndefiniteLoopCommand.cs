@@ -12,14 +12,14 @@ namespace Kogase.Core
             cancellationToken)
         {
             this.onUpdate = onUpdate;
-            this.cancellationToken = cancellationToken;
+            this.CancellationToken = cancellationToken;
         }
 
         public IndefiniteLoopCommand(double interval, System.Action onUpdate, CancellationToken cancellationToken) :
             base(null, cancellationToken)
         {
             this.onUpdate = onUpdate;
-            this.cancellationToken = cancellationToken;
+            this.CancellationToken = cancellationToken;
 
             expectedInterval = interval;
             currentIntervalTimer = interval;

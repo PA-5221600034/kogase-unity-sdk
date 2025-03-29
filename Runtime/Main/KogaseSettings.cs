@@ -58,6 +58,8 @@ namespace Kogase
 
             File.WriteAllText(filePath, json);
             UnityEditor.AssetDatabase.Refresh();
+
+            _sdkConfig = LoadSDKConfigFile();
 #endif
         }
 

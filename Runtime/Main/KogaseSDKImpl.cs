@@ -15,7 +15,7 @@ namespace Kogase
             {
                 if (api != null) return api;
                 var config = KogaseSettings.SDKConfig;
-                // api = new CommonApi(new KogaseHttpClient(), config);
+                api = new CommonApi(new KogaseHttpClient(), config);
 
                 return api;
             }

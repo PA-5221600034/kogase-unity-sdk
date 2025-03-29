@@ -12,8 +12,8 @@ namespace Kogase.Core
         {
             originalWaitTime = waitTime;
             this.waitTime = waitTime;
-            this.onDone = onDone;
-            this.cancellationToken = cancellationToken;
+            this.OnDone = onDone;
+            this.CancellationToken = cancellationToken;
         }
 
         public WaitTimeCommand(double waitTime, System.Action onDone, CancellationToken cancellationToken) : base(
@@ -21,8 +21,8 @@ namespace Kogase.Core
         {
             originalWaitTime = waitTime;
             this.waitTime = waitTime;
-            this.onDone = onDone;
-            this.cancellationToken = cancellationToken;
+            this.OnDone = onDone;
+            this.CancellationToken = cancellationToken;
         }
 
         public void ResetTime()

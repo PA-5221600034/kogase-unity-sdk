@@ -145,17 +145,6 @@ namespace Kogase.Utils
             return System.Text.Encoding.UTF8.GetString(data).ToObject<T>();
         }
 
-        // public static T GetValueFromJsonString<T>(this string obj, string key)
-        // {
-        //     T retval = default;
-        //     JObject jObject = JObject.Parse(obj);
-        //     if (jObject.ContainsKey(key))
-        //     {
-        //         retval = jObject[key]!.ToObject<T>();
-        //     }
-        //     return retval;
-        // }
-
         public static T GetValueFromJsonString<T>(this string jsonString, string key, T defaultValue = default)
         {
             if (string.IsNullOrWhiteSpace(jsonString))

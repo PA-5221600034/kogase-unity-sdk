@@ -1,3 +1,4 @@
+using Kogase.Core;
 using Kogase.Models;
 using UnityEngine.Assertions;
 
@@ -6,7 +7,6 @@ namespace Kogase.Api
     public abstract class ApiBase
     {
         readonly IHttpClient httpClient;
-        public IHttpClient HttpClient => httpClient;
 
         protected readonly string BaseUrl;
 

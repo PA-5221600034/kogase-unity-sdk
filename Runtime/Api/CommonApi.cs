@@ -18,28 +18,19 @@ namespace Kogase.Api
         public void TestConnection(OkDelegate<HealthResponse> okCallback = null, ErrorDelegate<Error> errorCallback = null)
         {
             var request = HttpRequestBuilder.CreateGet(BaseUrl + "/health/apikey")
-                .WithHeader("X-Kogase-Api-Key", Config.ApiKey)
+                .WithHeader("X-Kogase-API-Key", Config.ApiKey)
                 .Accepts(HttpMediaType.ApplicationJson)
                 .GetResult();
 
-            HttpOperator.SendRequest(request, response =>
+            HttpOperator.SendRequest(request, (response, error) =>
             {
-                Error error = HttpParser.ParseError(response);
                 if (error != null)
                 {
                     errorCallback?.Invoke(error);
                     return;
                 }
                 
-                try
-                {
-                    okCallback?.Invoke(response.BodyBytes.ToObject<HealthResponse>());
-                }
-                catch (Exception e)
-                {
-                    error = new Error(Code.ERROR_FROM_EXCEPTION, e.Message);
-                    errorCallback?.Invoke(error);
-                }
+                HttpParser.ParseResponse(response, okCallback, errorCallback);
             });
         }
         
@@ -50,24 +41,15 @@ namespace Kogase.Api
                 .Accepts(HttpMediaType.ApplicationJson)
                 .GetResult();
 
-            HttpOperator.SendRequest(request, response =>
+            HttpOperator.SendRequest(request, (response, error) =>
             {
-                Error error = HttpParser.ParseError(response);
                 if (error != null)
                 {
                     errorCallback?.Invoke(error);
                     return;
                 }
                 
-                try
-                {
-                    okCallback?.Invoke(response.BodyBytes.ToObject<CreateProjectResponse>());
-                }
-                catch (Exception e)
-                {
-                    error = new Error(Code.ERROR_FROM_EXCEPTION, e.Message);
-                    errorCallback?.Invoke(error);
-                }
+                HttpParser.ParseResponse(response, okCallback, errorCallback);
             });
         }
     }

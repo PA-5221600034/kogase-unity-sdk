@@ -10,7 +10,7 @@ namespace Kogase.Core
             base(null, cancellationToken)
         {
             this.onUpdate = onUpdate;
-            this.cancellationToken = cancellationToken;
+            this.CancellationToken = cancellationToken;
         }
 
         public override bool Update(float dt)

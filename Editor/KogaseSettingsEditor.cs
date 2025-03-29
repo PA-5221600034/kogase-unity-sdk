@@ -43,7 +43,7 @@ namespace Kogase.Editor
                 return;
             
             isInitialized = true;
-                
+            
             configFilePath = Path.Combine("Assets/Resources/Kogase", "KogaseSDKConfig.json");
 
             if (originalConfig == null)
@@ -60,6 +60,8 @@ namespace Kogase.Editor
             }
             
             editedConfig ??= originalConfig.Clone();
+            
+            createProjectRequest = new CreateProjectRequest();
         }
         
         void CloseFinal()
@@ -95,7 +97,6 @@ namespace Kogase.Editor
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal:false, alwaysShowVertical:false);
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            
             
             EditorGUILayout.LabelField(
                 $"SDK Version {KogaseSettings.SDKVersion}", 
@@ -159,6 +160,7 @@ namespace Kogase.Editor
             {
                 if (GUILayout.Button("Test Connection"))
                 {
+                    SaveConfig(true);
                     isDoingOperation = true;
                     Repaint();
 
@@ -171,6 +173,7 @@ namespace Kogase.Editor
                                 "Connection successful!", 
                                 "OK"
                             );
+                            GUI.FocusControl(null);
                             Repaint();
                         },
                         error =>
@@ -181,6 +184,7 @@ namespace Kogase.Editor
                                 $"Connection failed: {error.Message}",
                                 "OK"
                             );
+                            GUI.FocusControl(null);
                             Repaint();
                         }
                     );
@@ -197,6 +201,7 @@ namespace Kogase.Editor
             );
             
             EditorGUI.indentLevel++;
+
             
             string projectName = EditorGUILayout.TextField("Project Name", createProjectRequest.Name);
             if (projectName != createProjectRequest.Name)
@@ -219,13 +224,16 @@ namespace Kogase.Editor
                         ok =>
                         {
                             isDoingOperation = false;
+                            createProjectRequest = new CreateProjectRequest();
+                            
                             EditorUtility.DisplayDialog(
                                 "Create Project", 
                                 "Project created successfully!", 
                                 "OK"
                             );
-                            Debug.Log(ok.ApiKey);
+                            
                             editedConfig.ApiKey = ok.ApiKey;
+                            SaveConfig(true);
                             Repaint();
                         },
                         error =>
@@ -279,7 +287,7 @@ namespace Kogase.Editor
             Repaint();
         }
 
-        void SaveConfig()
+        void SaveConfig(bool force = false)
         {
             try
             {
@@ -290,11 +298,17 @@ namespace Kogase.Editor
                 GUI.FocusControl(null);
                 Repaint();
                 
-                EditorUtility.DisplayDialog("Kogase SDK", "Config saved successfully", "OK");
+                if (!force)
+                {
+                    EditorUtility.DisplayDialog("Kogase SDK", "Config saved successfully", "OK");
+                }
             }
             catch (Exception ex)
             {
-                EditorUtility.DisplayDialog("Kogase SDK", $"Failed to save config: {ex.Message}", "OK");
+                if (!force)
+                {
+                    EditorUtility.DisplayDialog("Kogase SDK", $"Failed to save config: {ex.Message}", "OK");
+                }
             }
         }
     }
