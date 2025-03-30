@@ -4,6 +4,7 @@ using System.IO;
 using Kogase.Dtos;
 using UnityEditor;
 using UnityEngine;
+
 namespace Kogase.Editor
 {
     /// <summary>
@@ -24,46 +25,44 @@ namespace Kogase.Editor
         bool isDirty;
         bool isInitialized;
         bool isDoingOperation;
-        
+
         [MenuItem("Kogase/Edit Settings")]
         public static void OpenWindow()
         {
-            if (_instance != null)
-            {
-                _instance.CloseFinal();
-            }
-            
-            _instance = GetWindow<KogaseSettingsEditor>(KWindowTitle, true, Type.GetType("UnityEditor.InspectorWindow, UnityEditor.dll"));
+            if (_instance != null) _instance.CloseFinal();
+
+            _instance = GetWindow<KogaseSettingsEditor>(KWindowTitle, true,
+                Type.GetType("UnityEditor.InspectorWindow, UnityEditor.dll"));
             _instance.Show();
         }
-        
+
         void Initialize()
         {
             if (isInitialized)
                 return;
-            
+
             isInitialized = true;
-            
+
             configFilePath = Path.Combine("Assets/Resources/Kogase", "KogaseSDKConfig.json");
 
             if (originalConfig == null)
             {
                 originalConfig = KogaseSettings.SDKConfig;
-                
+
                 if (originalConfig == null)
                 {
                     originalConfig = new KogaseConfig();
-                    string json = JsonUtility.ToJson(originalConfig, true);
+                    var json = JsonUtility.ToJson(originalConfig, true);
                     File.WriteAllText(configFilePath, json);
                     AssetDatabase.Refresh();
                 }
             }
-            
+
             editedConfig ??= originalConfig.Clone();
-            
+
             createProjectRequest = new CreateProjectRequest();
         }
-        
+
         void CloseFinal()
         {
             Close();
@@ -73,81 +72,70 @@ namespace Kogase.Editor
         void OnGUI()
         {
             Initialize();
-            
+
             EditorGUILayout.BeginVertical();
-            
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField(
-                "Kogase SDK Settings", 
-                new GUIStyle(EditorStyles.boldLabel)
-                {
-                    fontSize = 16,
-                    alignment = TextAnchor.MiddleCenter
-                }
-            );
-            EditorGUILayout.Space(10);
-            
+
             if (EditorApplication.isPlaying)
             {
-                EditorGUILayout.HelpBox("Editor Deactivated On Runtime", MessageType.Info, wide: true);
+                EditorGUILayout.HelpBox("Editor Deactivated On Runtime", MessageType.Info, true);
                 EditorGUILayout.EndVertical();
                 return;
             }
-            
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal:false, alwaysShowVertical:false);
-            
+
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, false, false);
+
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            
+
             EditorGUILayout.LabelField(
-                $"SDK Version {KogaseSettings.SDKVersion}", 
+                $"SDK Version {KogaseSettings.SDKVersion}",
                 new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter }
             );
-            
+
             EditorGUI.indentLevel++;
 
-            string baseUrl = EditorGUILayout.TextField("Base URL", editedConfig.BaseUrl);
+            var baseUrl = EditorGUILayout.TextField("Base URL", editedConfig.BaseUrl);
             if (baseUrl != editedConfig.BaseUrl)
             {
                 editedConfig.BaseUrl = baseUrl;
                 isDirty = true;
             }
-            
-            string apiKey = EditorGUILayout.TextField("API Key", editedConfig.ApiKey);
+
+            var apiKey = EditorGUILayout.TextField("API Key", editedConfig.ApiKey);
             if (apiKey != editedConfig.ApiKey)
             {
                 editedConfig.ApiKey = apiKey;
                 isDirty = true;
             }
-            
-            string apiVersion = EditorGUILayout.TextField("API Version", editedConfig.ApiVersion);
+
+            var apiVersion = EditorGUILayout.TextField("API Version", editedConfig.ApiVersion);
             if (apiVersion != editedConfig.ApiVersion)
             {
                 editedConfig.ApiVersion = apiVersion;
                 isDirty = true;
             }
-            
-            int maxCachedEvents = EditorGUILayout.IntField("Max Cached Events", editedConfig.MaxCachedEvents);
+
+            var maxCachedEvents = EditorGUILayout.IntField("Max Cached Events", editedConfig.MaxCachedEvents);
             if (maxCachedEvents != editedConfig.MaxCachedEvents)
             {
                 editedConfig.MaxCachedEvents = maxCachedEvents;
                 isDirty = true;
             }
-            
-            bool enableDebugLogging = EditorGUILayout.Toggle("Enable Debug Log", editedConfig.EnableDebugLogging);
+
+            var enableDebugLogging = EditorGUILayout.Toggle("Enable Debug Log", editedConfig.EnableDebugLogging);
             if (enableDebugLogging != editedConfig.EnableDebugLogging)
             {
                 editedConfig.EnableDebugLogging = enableDebugLogging;
                 isDirty = true;
             }
-            
-            bool autoTrackSessions = EditorGUILayout.Toggle("Auto-Track Sessions", editedConfig.AutoTrackSessions);
+
+            var autoTrackSessions = EditorGUILayout.Toggle("Auto-Track Sessions", editedConfig.AutoTrackSessions);
             if (autoTrackSessions != editedConfig.AutoTrackSessions)
             {
                 editedConfig.AutoTrackSessions = autoTrackSessions;
                 isDirty = true;
             }
-            
-            bool enableOfflineCache = EditorGUILayout.Toggle("Enable Offline Cache", editedConfig.EnableOfflineCache);
+
+            var enableOfflineCache = EditorGUILayout.Toggle("Enable Offline Cache", editedConfig.EnableOfflineCache);
             if (enableOfflineCache != editedConfig.EnableOfflineCache)
             {
                 editedConfig.EnableOfflineCache = enableOfflineCache;
@@ -164,13 +152,13 @@ namespace Kogase.Editor
                     isDoingOperation = true;
                     Repaint();
 
-                    KogaseSDK.TestConnection(
+                    KogaseSDK.Api.TestConnection(
                         ok =>
                         {
                             isDoingOperation = false;
                             EditorUtility.DisplayDialog(
-                                "Test Connection", 
-                                "Connection successful!", 
+                                "Test Connection",
+                                "Connection successful!",
                                 "OK"
                             );
                             GUI.FocusControl(null);
@@ -180,7 +168,7 @@ namespace Kogase.Editor
                         {
                             isDoingOperation = false;
                             EditorUtility.DisplayDialog(
-                                "Test Connection", 
+                                "Test Connection",
                                 $"Connection failed: {error.Message}",
                                 "OK"
                             );
@@ -192,26 +180,25 @@ namespace Kogase.Editor
             }
 
             EditorGUILayout.EndVertical();
-            
+
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            
+
             EditorGUILayout.LabelField(
-                "Create Project Here (optional)", 
+                "Create Project Here (optional)",
                 new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter }
             );
-            
-            EditorGUI.indentLevel++;
 
+            EditorGUI.indentLevel++;
             
-            string projectName = EditorGUILayout.TextField("Project Name", createProjectRequest.Name);
+            var projectName = EditorGUILayout.TextField("Project Name", (createProjectRequest ??= new CreateProjectRequest()).Name);
             if (projectName != createProjectRequest.Name)
             {
                 createProjectRequest.Name = projectName;
                 Repaint();
             }
-            
+
             EditorGUI.indentLevel--;
-            
+
             using (new EditorGUI.DisabledGroupScope(isDoingOperation || string.IsNullOrEmpty(projectName)))
             {
                 if (GUILayout.Button("Create Project"))
@@ -219,19 +206,19 @@ namespace Kogase.Editor
                     isDoingOperation = true;
                     Repaint();
 
-                    KogaseSDK.CreateProject(
+                    KogaseSDK.Api.CreateProject(
                         createProjectRequest,
                         ok =>
                         {
                             isDoingOperation = false;
                             createProjectRequest = new CreateProjectRequest();
-                            
+
                             EditorUtility.DisplayDialog(
-                                "Create Project", 
-                                "Project created successfully!", 
+                                "Create Project",
+                                "Project created successfully!",
                                 "OK"
                             );
-                            
+
                             editedConfig.ApiKey = ok.ApiKey;
                             SaveConfig(true);
                             Repaint();
@@ -240,7 +227,7 @@ namespace Kogase.Editor
                         {
                             isDoingOperation = false;
                             EditorUtility.DisplayDialog(
-                                "Create Project", 
+                                "Create Project",
                                 $"Failed to create project: {error.Message}",
                                 "OK"
                             );
@@ -249,39 +236,27 @@ namespace Kogase.Editor
                     );
                 }
             }
-            
+
             EditorGUILayout.EndVertical();
-            
+
             EditorGUILayout.EndScrollView();
-            
+
             EditorGUILayout.EndVertical();
-            
-            if (isDoingOperation)
-            {
-                EditorGUILayout.HelpBox("Wait for a minute...", MessageType.Info);
-            }
-            
-            if (isDirty)
-            {
-                EditorGUILayout.HelpBox("You have unsaved changes", MessageType.Warning);
-            }
-            
-            if (GUILayout.Button("Reset"))
-            {
-                ResetConfig();
-            }
-            
+
+            if (isDoingOperation) EditorGUILayout.HelpBox("Wait for a minute...", MessageType.Info);
+
+            if (isDirty) EditorGUILayout.HelpBox("You have unsaved changes", MessageType.Warning);
+
+            if (GUILayout.Button("Reset")) ResetConfig();
+
             GUI.enabled = isDirty;
-            if (GUILayout.Button("Save"))
-            {
-                SaveConfig();
-            }
+            if (GUILayout.Button("Save")) SaveConfig();
         }
 
         void ResetConfig()
         {
             editedConfig = originalConfig.Clone();
-            
+
             isDirty = false;
             GUI.FocusControl(null);
             Repaint();
@@ -293,23 +268,17 @@ namespace Kogase.Editor
             {
                 originalConfig = editedConfig.Clone();
                 KogaseSettings.SaveSDKConfigFile(originalConfig);
-                
+
                 isDirty = false;
                 GUI.FocusControl(null);
                 Repaint();
-                
-                if (!force)
-                {
-                    EditorUtility.DisplayDialog("Kogase SDK", "Config saved successfully", "OK");
-                }
+
+                if (!force) EditorUtility.DisplayDialog("Kogase SDK", "Config saved successfully", "OK");
             }
             catch (Exception ex)
             {
-                if (!force)
-                {
-                    EditorUtility.DisplayDialog("Kogase SDK", $"Failed to save config: {ex.Message}", "OK");
-                }
+                if (!force) EditorUtility.DisplayDialog("Kogase SDK", $"Failed to save config: {ex.Message}", "OK");
             }
         }
     }
-} 
+}

@@ -31,13 +31,11 @@ namespace Kogase.Core
         )
         {
             if (!instantWrite)
-            {
                 lock (ioQueue)
                 {
                     ioQueue.Add(WriteAction);
                 }
-            }
-            
+
             WriteAction();
             return;
 
@@ -70,8 +68,8 @@ namespace Kogase.Core
         }
 
         public async void WriteFileAsync(
-            string content, 
-            string path, 
+            string content,
+            string path,
             Action<bool> onDone
         )
         {
@@ -80,8 +78,8 @@ namespace Kogase.Core
                 var pathDirectory = Path.GetDirectoryName(path);
                 if (string.IsNullOrEmpty(pathDirectory))
                     throw new ArgumentException("Path is empty.");
-                
-                if (!Directory.Exists(pathDirectory)) 
+
+                if (!Directory.Exists(pathDirectory))
                     Directory.CreateDirectory(pathDirectory);
 
                 await using var outputFile = new StreamWriter(path);
@@ -103,13 +101,11 @@ namespace Kogase.Core
         )
         {
             if (!instantRead)
-            {
                 lock (ioQueue)
                 {
                     ioQueue.Add(ReadAction);
                 }
-            }
-            
+
             ReadAction();
             return;
 
@@ -155,7 +151,7 @@ namespace Kogase.Core
                     onDone?.Invoke(false, null);
                     return;
                 }
-                
+
                 string result;
                 using (var reader = File.OpenText(path))
                 {
@@ -178,13 +174,11 @@ namespace Kogase.Core
         )
         {
             if (!instantDelete)
-            {
                 lock (ioQueue)
                 {
                     ioQueue.Add(DeleteAction);
                 }
-            }
-            
+
             DeleteAction();
             return;
 

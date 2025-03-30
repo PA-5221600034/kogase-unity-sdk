@@ -10,8 +10,8 @@ namespace Kogase.Core
 
         public WaitCommand(System.Action onDone, CancellationToken cancellationToken)
         {
-            this.OnDone = onDone;
-            this.CancellationToken = cancellationToken;
+            OnDone = onDone;
+            CancellationToken = cancellationToken;
         }
 
         public bool IsCancelled()

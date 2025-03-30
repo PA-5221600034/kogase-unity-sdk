@@ -3,7 +3,7 @@ namespace Kogase.Core
     /// <summary>
     /// Contains common MIME media type constants for use with HTTP requests
     /// </summary>
-    public sealed class HttpMediaType
+    internal sealed class HttpMediaType
     {
         readonly string name;
 

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 namespace Kogase.Core
@@ -24,10 +23,10 @@ namespace Kogase.Core
         }
     }
 
-    public class HttpAsyncOperator : HttpOperator
+    internal class HttpAsyncOperator : HttpOperator
     {
-        private readonly IHttpClient httpClient;
-        
+        readonly IHttpClient httpClient;
+
         public override IHttpClient HttpClient => httpClient;
 
         public HttpAsyncOperator(IHttpClient httpClient)
@@ -39,7 +38,7 @@ namespace Kogase.Core
         {
             try
             {
-                HttpSendResult result = await httpClient.SendRequestAsync(request);
+                var result = await httpClient.SendRequestAsync(request);
                 response?.Invoke(result.CallbackResponse);
             }
             catch (Exception e)
@@ -52,7 +51,7 @@ namespace Kogase.Core
         {
             try
             {
-                HttpSendResult result = await httpClient.SendRequestAsync(request);
+                var result = await httpClient.SendRequestAsync(request);
                 response?.Invoke(result.CallbackResponse, result.CallbackError);
             }
             catch (Exception e)
@@ -62,10 +61,10 @@ namespace Kogase.Core
         }
     }
 
-    public class HttpCoroutineOperator : HttpOperator
+    internal class HttpCoroutineOperator : HttpOperator
     {
-        private readonly IHttpClient httpClient;
-        private readonly CoroutineRunner runner;
+        readonly IHttpClient httpClient;
+        readonly CoroutineRunner runner;
 
         public override IHttpClient HttpClient => httpClient;
 
@@ -85,4 +84,4 @@ namespace Kogase.Core
             runner.Run(httpClient.SendRequest(request, response));
         }
     }
-} 
+}

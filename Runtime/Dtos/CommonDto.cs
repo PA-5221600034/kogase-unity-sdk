@@ -4,19 +4,22 @@ using UnityEngine.Scripting;
 
 namespace Kogase.Dtos
 {
-    [DataContract, Preserve]
+    [DataContract]
+    [Preserve]
     public class HealthResponse
     {
         [DataMember(Name = "status")] public string Status { get; set; }
     }
-    
-    [DataContract, Preserve]
+
+    [DataContract]
+    [Preserve]
     public class CreateProjectRequest
     {
         [DataMember(Name = "name")] public string Name { get; set; }
     }
 
-    [DataContract, Preserve]
+    [DataContract]
+    [Preserve]
     public class CreateProjectResponse
     {
         [DataMember(Name = "id")] public Guid Id { get; set; }

@@ -4,7 +4,7 @@ using Kogase.Utils;
 
 namespace Kogase.Core
 {
-    public static class HttpParser
+    internal static class HttpParser
     {
         /// <summary>
         /// Parses an HTTP response for errors
@@ -13,23 +13,17 @@ namespace Kogase.Core
         /// <returns>An Error object if an error occurred, null otherwise</returns>
         public static Error ParseError(IHttpResponse response)
         {
-            if (response == null)
-            {
-                return new Error(Code.NETWORK_ERROR, "No response received");
-            }
+            if (response == null) return new Error(Code.NETWORK_ERROR, "No response received");
 
             if (response.Code < 200 || response.Code >= 300)
             {
-                Code errorCode = GetErrorCodeFromStatusCode(response.Code);
+                var errorCode = GetErrorCodeFromStatusCode(response.Code);
                 string errorMessage = null;
 
                 try
                 {
                     var responseText = Encoding.UTF8.GetString(response.BodyBytes);
-                    if (!string.IsNullOrEmpty(responseText))
-                    {
-                        errorMessage = responseText;
-                    }
+                    if (!string.IsNullOrEmpty(responseText)) errorMessage = responseText;
                 }
                 catch (Exception e)
                 {
@@ -49,18 +43,19 @@ namespace Kogase.Core
         /// <param name="response">HTTP response</param>
         /// <param name="okCallback">Success callback</param>
         /// <param name="errorCallback">Error callback</param>
-        public static void ParseResponse<T>(IHttpResponse response, OkDelegate<T> okCallback, ErrorDelegate<Error> errorCallback)
+        public static void ParseResponse<T>(IHttpResponse response, OkDelegate<T> okCallback,
+            ErrorDelegate<Error> errorCallback)
         {
-            Error error = ParseError(response);
+            var error = ParseError(response);
             if (error != null)
             {
                 errorCallback?.Invoke(error);
                 return;
             }
-            
+
             try
             {
-                T result = response.BodyBytes.ToObject<T>();
+                var result = response.BodyBytes.ToObject<T>();
                 okCallback?.Invoke(result);
             }
             catch (Exception e)
@@ -73,7 +68,7 @@ namespace Kogase.Core
         /// <summary>
         /// Maps HTTP status codes to error codes
         /// </summary>
-        private static Code GetErrorCodeFromStatusCode(long statusCode)
+        static Code GetErrorCodeFromStatusCode(long statusCode)
         {
             return statusCode switch
             {
@@ -107,4 +102,4 @@ namespace Kogase.Core
             };
         }
     }
-} 
+}

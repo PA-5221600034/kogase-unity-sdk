@@ -1,8 +1,6 @@
-﻿
-using System;
+﻿using System;
 using UnityEngine;
 #if !UNITY_WEBGL
-using System.Text;
 #endif
 
 namespace Kogase.Core
@@ -21,7 +19,7 @@ namespace Kogase.Core
 
             if (string.IsNullOrEmpty(cacheDirectory))
                 throw new InvalidOperationException("Cache directory is empty.");
-            
+
             this.cacheDirectory = cacheDirectory;
             this.fs = fs;
         }
@@ -56,7 +54,6 @@ namespace Kogase.Core
                 var filePath = GetFileFullPath(key);
                 var writeSuccess = false;
                 while (!writeSuccess)
-                {
                     try
                     {
                         fs.WriteFileAsync(item, filePath, success => { writeSuccess = success; });
@@ -65,7 +62,6 @@ namespace Kogase.Core
                     {
                         await System.Threading.Tasks.Task.Delay(ReadWriteAsyncWaitMs);
                     }
-                }
 
                 callback?.Invoke(true);
             }
@@ -129,17 +125,14 @@ namespace Kogase.Core
         public bool Remove(string key)
         {
             var result = false;
-            
+
             try
             {
                 var filePath = GetFileFullPath(key);
                 fs.DeleteFile(
-                    filePath, 
-                    instantDelete: true, 
-                    onDone: isSuccess =>
-                    {
-                        result = isSuccess;
-                    }
+                    filePath,
+                    instantDelete: true,
+                    onDone: isSuccess => { result = isSuccess; }
                 );
             }
             catch (Exception e)

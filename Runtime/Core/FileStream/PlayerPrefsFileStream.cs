@@ -32,7 +32,7 @@ namespace Kogase.Core
                 }
             }
         }
-        
+
         public bool IsFileExist(string path)
         {
             var keyExist = saveDict.ContainsKey(path);
@@ -70,7 +70,7 @@ namespace Kogase.Core
 
             return false;
         }
-        
+
         public void DeleteDirectory(string directory, Action<bool> onDone)
         {
             if (saveDict.Count == 0)
@@ -142,7 +142,7 @@ namespace Kogase.Core
             PlayerPrefs.Save();
             onDone?.Invoke(true);
         }
-        
+
         public void ReadFileAsync(string path, Action<bool, string> onDone)
         {
             if (!IsFileExist(path))
@@ -166,7 +166,7 @@ namespace Kogase.Core
         void IFileStream.RemoveOnPop(Action action)
         {
         }
-        
+
         void IFileStream.Pop()
         {
         }

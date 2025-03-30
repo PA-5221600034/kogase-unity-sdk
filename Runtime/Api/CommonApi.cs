@@ -1,4 +1,3 @@
-using System;
 using Kogase.Core;
 using Kogase.Models;
 using Kogase.Dtos;
@@ -14,43 +13,27 @@ namespace Kogase.Api
             : base(inHttpClient, inConfig)
         {
         }
-        
-        public void TestConnection(OkDelegate<HealthResponse> okCallback = null, ErrorDelegate<Error> errorCallback = null)
+
+        public void TestConnection(OkDelegate<HealthResponse> okCallback = null,
+            ErrorDelegate<Error> errorCallback = null)
         {
             var request = HttpRequestBuilder.CreateGet(BaseUrl + "/health/apikey")
                 .WithHeader("X-Kogase-API-Key", Config.ApiKey)
                 .Accepts(HttpMediaType.ApplicationJson)
                 .GetResult();
 
-            HttpOperator.SendRequest(request, (response, error) =>
-            {
-                if (error != null)
-                {
-                    errorCallback?.Invoke(error);
-                    return;
-                }
-                
-                HttpParser.ParseResponse(response, okCallback, errorCallback);
-            });
+            HttpOperator.Send(request, okCallback, errorCallback);
         }
-        
-        public void CreateProject(CreateProjectRequest payload, OkDelegate<CreateProjectResponse> okCallback = null, ErrorDelegate<Error> errorCallback = null)
+
+        public void CreateProject(CreateProjectRequest payload, OkDelegate<CreateProjectResponse> okCallback = null,
+            ErrorDelegate<Error> errorCallback = null)
         {
             var request = HttpRequestBuilder.CreatePost(BaseUrl + "/projects")
                 .WithJsonBody(payload)
                 .Accepts(HttpMediaType.ApplicationJson)
                 .GetResult();
 
-            HttpOperator.SendRequest(request, (response, error) =>
-            {
-                if (error != null)
-                {
-                    errorCallback?.Invoke(error);
-                    return;
-                }
-                
-                HttpParser.ParseResponse(response, okCallback, errorCallback);
-            });
+            HttpOperator.Send(request, okCallback, errorCallback);
         }
     }
 }

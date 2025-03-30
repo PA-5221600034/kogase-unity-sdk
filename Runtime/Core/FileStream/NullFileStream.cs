@@ -7,13 +7,13 @@ namespace Kogase.Core
     public class NullFileStream : IFileStream
     {
         readonly Dictionary<string, string> saveDict = new();
-        
+
         public bool IsFileExist(string path)
         {
             var keyExist = saveDict.ContainsKey(path);
             return keyExist;
         }
-        
+
         public void DeleteFile(
             string path,
             Action<bool> onDone,
@@ -38,7 +38,7 @@ namespace Kogase.Core
 
             return false;
         }
-        
+
         public void DeleteDirectory(string directory, Action<bool> onDone)
         {
             if (saveDict.Count == 0)
@@ -59,10 +59,10 @@ namespace Kogase.Core
 
             onDone?.Invoke(isDirectoryFound);
         }
-        
+
         public void WriteFile(
             IFormatter formatter,
-            string content, 
+            string content,
             string path,
             Action<bool> onDone,
             bool instantWrite = false
@@ -88,7 +88,7 @@ namespace Kogase.Core
             var output = saveDict[path];
             onDone?.Invoke(true, output);
         }
-        
+
         public void WriteFileAsync(
             string content,
             string path,
@@ -118,11 +118,11 @@ namespace Kogase.Core
         void IFileStream.AddOnPop(Action action)
         {
         }
-        
+
         void IFileStream.RemoveOnPop(Action action)
         {
         }
-        
+
         void IFileStream.Pop()
         {
         }

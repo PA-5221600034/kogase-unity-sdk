@@ -1,14 +1,13 @@
 using Kogase.Api;
 using Kogase.Core;
-using Kogase.Dtos;
 using Kogase.Models;
-using Kogase.Utils;
 
 namespace Kogase
 {
     internal class KogaseSDKImpl
     {
         CommonApi api;
+
         internal CommonApi Api
         {
             get
@@ -52,7 +51,7 @@ namespace Kogase
 
         IFileStream fileStream;
         internal IFileStream FileStream => fileStream ??= CreateFileStream();
-        
+
         public IFileStreamFactory FileStreamFactory;
 
         IFileStream CreateFileStream()
