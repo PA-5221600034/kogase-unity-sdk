@@ -1,56 +1,83 @@
 using Kogase.Api;
 using Kogase.Core;
-using Kogase.Models;
 
 namespace Kogase
 {
     internal class KogaseSDKImpl
     {
-        CommonApi api;
+        CommonApi _api;
 
         internal CommonApi Api
         {
             get
             {
-                if (api != null) return api;
-                var config = KogaseSettings.SDKConfig;
-                api = new CommonApi(new KogaseHttpClient(), config);
+                if (_api != null) return _api;
+                _api = new CommonApi(new KogaseHttpClient(), KogaseSettings.SDKConfig);
 
-                return api;
+                return _api;
             }
         }
 
-        HeartBeat heartBeat;
-        HeartBeat HeartBeat => heartBeat ??= new HeartBeat();
+        HeartBeat _heartBeat;
+        HeartBeat HeartBeat => _heartBeat ??= new HeartBeat();
 
         public string Version => KogaseSettings.SDKVersion;
+
+        SessionManager _sessionManager;
+
+        internal SessionManager SessionManager
+        {
+            get
+            {
+                if (_sessionManager != null) return _sessionManager;
+                _sessionManager = new SessionManager();
+                return _sessionManager;
+            }
+        }
+
+        EventManager _eventManager;
+
+        internal EventManager EventManager
+        {
+            get
+            {
+                if (_eventManager != null) return _eventManager;
+                _eventManager = new EventManager(new EventCache(KogaseSettings.SDKConfig, FileStream));
+                return _eventManager;
+            }
+        }
 
         public KogaseSDKImpl()
         {
         }
 
-        public KogaseConfig GetConfig()
+        internal string GetOrCreateDeviceIdentifier()
         {
-            var retval = KogaseSettings.SDKConfig;
-            retval = retval.Clone();
-            return retval;
+            return IdentifierProvider.GetFromSystemInfo(KogaseSettings.SDKConfig.ApiKey, fs: FileStream).Identifier;
         }
 
         internal void Reset()
         {
-            // TODO: Implement reset logic
+            if (SessionManager is { IsSessionActive: true })
+                SessionManager.EndSession();
 
-            if (heartBeat != null)
+            if (_heartBeat != null)
             {
-                heartBeat.Reset();
-                heartBeat = null;
+                _heartBeat.Reset();
+                _heartBeat = null;
             }
+
+            EventManager.SavePendingEvents();
+
+            _api = null;
+            _sessionManager = null;
+            _eventManager = null;
         }
 
         #region File Stream
 
-        IFileStream fileStream;
-        internal IFileStream FileStream => fileStream ??= CreateFileStream();
+        IFileStream _fileStream;
+        internal IFileStream FileStream => _fileStream ??= CreateFileStream();
 
         public IFileStreamFactory FileStreamFactory;
 
@@ -67,7 +94,7 @@ namespace Kogase
 
         internal void DisposeFileStream()
         {
-            if (fileStream != null) fileStream.Dispose();
+            if (_fileStream != null) _fileStream.Dispose();
         }
 
         #endregion File Stream

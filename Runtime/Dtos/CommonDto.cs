@@ -22,7 +22,7 @@ namespace Kogase.Dtos
     [Preserve]
     public class CreateProjectResponse
     {
-        [DataMember(Name = "id")] public Guid Id { get; set; }
+        [DataMember(Name = "project_id")] public Guid ProjectId { get; set; }
         [DataMember(Name = "name")] public string Name { get; set; }
         [DataMember(Name = "api_key")] public string ApiKey { get; set; }
         [DataMember(Name = "owner_id")] public Guid OwnerId { get; set; }

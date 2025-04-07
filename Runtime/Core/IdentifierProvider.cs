@@ -89,27 +89,27 @@ namespace Kogase.Core
                     if (fileCache.Contains(CacheFileName))
                     {
                         platformUniqueIdentifier = fileCache.Retrieve(CacheFileName);
-                        Debug.Log($"Retrieve cached device id: {platformUniqueIdentifier}");
-                        // logger?.LogVerbose($"Retrieve cached device id: {platformUniqueIdentifier}");
+                        Debug.Log($"Retrieve cached identifier: {platformUniqueIdentifier}");
+                        // logger?.LogVerbose($"Retrieve cached identifier: {platformUniqueIdentifier}");
                     }
                     else
                     {
                         platformUniqueIdentifier = GenerateIdentifier();
                         fileCache.Emplace(CacheFileName, platformUniqueIdentifier);
-                        Debug.Log($"Generate new device id: {platformUniqueIdentifier}");
-                        // logger?.LogVerbose($"Generate new device id: {platformUniqueIdentifier}");
+                        Debug.Log($"Generate new identifier: {platformUniqueIdentifier}");
+                        // logger?.LogVerbose($"Generate new identifier: {platformUniqueIdentifier}");
                     }
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"Unable to access device id cache, {e.Message}");
-                    // logger?.LogWarning($"Unable to access device id cache, {exception.Message}");
+                    Debug.LogWarning($"Unable to access identifier cache, {e.Message}");
+                    // logger?.LogWarning($"Unable to access identifier cache, {exception.Message}");
 
                     if (string.IsNullOrEmpty(platformUniqueIdentifier))
                         platformUniqueIdentifier = GenerateIdentifier();
 
-                    Debug.LogWarning($"Unable to access device id cache, {e.Message}");
-                    // logger?.LogVerbose($"Generate new device id: {platformUniqueIdentifier}");
+                    Debug.LogWarning($"Generate new identifier: {platformUniqueIdentifier}");
+                    // logger?.LogVerbose($"Generate new identifier: {platformUniqueIdentifier}");
                 }
 
             var identifier = $"unity_{CommonInfo.DeviceType}_{CommonInfo.PlatformName}";
@@ -136,8 +136,8 @@ namespace Kogase.Core
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"Unable to access device id cache, {e.Message}");
-                // logger?.LogWarning($"Unable to cache device id, {exception.Message}");
+                Debug.LogWarning($"Unable to access identifier cache, {e.Message}");
+                // logger?.LogWarning($"Unable to cache identifier, {exception.Message}");
             }
         }
 
@@ -217,7 +217,7 @@ namespace Kogase.Core
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"Unable to get device id, {e.Message}");
+                Debug.LogWarning($"Unable to get identifier, {e.Message}");
                 // logger?.LogVerbose(e.Message);
                 platformUniqueIdentifier = null;
             }

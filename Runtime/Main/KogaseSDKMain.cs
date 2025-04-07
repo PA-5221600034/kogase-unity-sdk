@@ -37,14 +37,6 @@ namespace Kogase
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         static void StartSDK()
         {
-            // if (Main == null)
-            // {
-            //     Main = new PlatformMain();
-            // }
-
-            // string newId = System.Guid.NewGuid().ToString();
-            // FlightId = newId.Replace("-", string.Empty);
-
             _onUpdate = null;
 
             ExecuteBootstraps();
@@ -63,7 +55,6 @@ namespace Kogase
             if (_isInitialized)
                 return;
 
-            // Main.Run();
             _isInitialized = true;
         }
 
@@ -73,7 +64,6 @@ namespace Kogase
             SdkInterfaceBootstrap.Stop();
             DetachMonoBehaviourSignaller();
 
-            // Main.Stop();
             _isInitialized = false;
 
             OnSDKStopped = null;

@@ -1,4 +1,5 @@
 using Kogase.Api;
+using System;
 
 namespace Kogase
 {
@@ -18,5 +19,10 @@ namespace Kogase
         public static string Version => Implementation.Version;
 
         public static CommonApi Api => Implementation.Api;
+
+        public static void BeginSession(Action okCallback = null, Action errorCallback = null)
+        {
+            Implementation.SessionManager.BeginSession(okCallback, errorCallback);
+        }
     }
 }
