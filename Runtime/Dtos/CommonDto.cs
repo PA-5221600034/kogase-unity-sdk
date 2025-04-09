@@ -25,6 +25,15 @@ namespace Kogase.Dtos
         [DataMember(Name = "project_id")] public Guid ProjectId { get; set; }
         [DataMember(Name = "name")] public string Name { get; set; }
         [DataMember(Name = "api_key")] public string ApiKey { get; set; }
-        [DataMember(Name = "owner_id")] public Guid OwnerId { get; set; }
+        [DataMember(Name = "owner")] public OwnerDto Owner { get; set; }
+    }
+    
+    [DataContract]
+    [Preserve]
+    public class OwnerDto
+    {
+        [DataMember(Name = "id")] public Guid Id { get; set; }
+        [DataMember(Name = "email")] public string Email { get; set; }
+        [DataMember(Name = "name")] public string Name { get; set; }
     }
 }

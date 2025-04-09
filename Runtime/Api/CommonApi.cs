@@ -71,7 +71,7 @@ namespace Kogase.Api
             OkDelegate<FinishSessionResponse> okCallback = null,
             ErrorDelegate<Error> errorCallback = null)
         {
-            var httpRequest = HttpRequestBuilder.CreatePost(BaseUrl + "/sessions/finish")
+            var httpRequest = HttpRequestBuilder.CreatePost(BaseUrl + "/sessions/end")
                 .WithHeader("X-Kogase-API-Key", Config.ApiKey)
                 .WithJsonBody(request)
                 .Accepts(HttpMediaType.ApplicationJson)
