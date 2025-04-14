@@ -70,16 +70,22 @@ namespace Kogase
             var unityAssetPath = UnityEditor.AssetDatabase.GUIDToAssetPath(x[0]);
             var relativePath = unityAssetPath.StartsWith("Assets/")
                 ? unityAssetPath.Substring("Assets/".Length)
-                : unityAssetPath;
+                : unityAssetPath.StartsWith("Packages/")
+                    ? unityAssetPath.Substring("Packages/".Length)
+                    : unityAssetPath;
+
             var fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, relativePath));
             var sdkPath = Path.GetDirectoryName(Path.GetDirectoryName(fullPath));
 
             if (sdkPath != null)
             {
                 var packageFilePath = Path.Combine(sdkPath, "package.json");
-                var packageFileJsonText = File.ReadAllText(packageFilePath);
 
-                return packageFileJsonText.GetValueFromJsonString<string>("version");
+                if (File.Exists(packageFilePath))
+                {
+                    var packageFileJsonText = File.ReadAllText(packageFilePath);
+                    return packageFileJsonText.GetValueFromJsonString<string>("version");
+                }
             }
 
             return "0.0.0";
