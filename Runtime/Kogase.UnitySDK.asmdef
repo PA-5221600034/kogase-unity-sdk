@@ -1,9 +1,7 @@
 {
   "name": "Kogase.UnitySDK",
   "rootNamespace": "Kogase",
-  "references": [
-    "Komutil.JsonPlayerPrefs"
-  ],
+  "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
