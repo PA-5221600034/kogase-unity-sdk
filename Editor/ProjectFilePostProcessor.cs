@@ -11,6 +11,7 @@ public class ProjectFilePostProcessor  : AssetPostprocessor
 
     public static string OnGeneratedCSProject(string path, string content)
     {
+#if UNITY_EDITOR
         var x = UnityEditor.AssetDatabase.FindAssets($"t:Script {nameof(KogaseSDKRuntimeFolderPathNavigator)}");
         var unityAssetPath = UnityEditor.AssetDatabase.GUIDToAssetPath(x[0]);
         var relativePath = unityAssetPath.StartsWith("Assets/")
@@ -34,5 +35,6 @@ public class ProjectFilePostProcessor  : AssetPostprocessor
            content = content.Replace(runtimeProjectConfigFindStr, runtimeProjectConfigReplaceStr);
         }
         return content;
+#endif
     }
 }
