@@ -90,6 +90,7 @@ namespace Kogase
 
             return "0.0.0";
 #endif
+            return "0.0.0";
         }
     }
 }
