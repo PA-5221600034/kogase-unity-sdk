@@ -199,43 +199,43 @@ namespace Kogase.Editor
 
             EditorGUI.indentLevel--;
 
-            using (new EditorGUI.DisabledGroupScope(isDoingOperation || string.IsNullOrEmpty(projectName)))
-            {
-                if (GUILayout.Button("Create Project"))
-                {
-                    isDoingOperation = true;
-                    Repaint();
+            // using (new EditorGUI.DisabledGroupScope(isDoingOperation || string.IsNullOrEmpty(projectName)))
+            // {
+            //     if (GUILayout.Button("Create Project"))
+            //     {
+            //         isDoingOperation = true;
+            //         Repaint();
 
-                    KogaseSDK.Api.CreateProject(
-                        createProjectRequest,
-                        ok =>
-                        {
-                            isDoingOperation = false;
-                            createProjectRequest = new CreateProjectRequest();
+            //         KogaseSDK.Api.CreateProject(
+            //             createProjectRequest,
+            //             ok =>
+            //             {
+            //                 isDoingOperation = false;
+            //                 createProjectRequest = new CreateProjectRequest();
 
-                            EditorUtility.DisplayDialog(
-                                "Create Project",
-                                "Project created successfully!",
-                                "OK"
-                            );
+            //                 EditorUtility.DisplayDialog(
+            //                     "Create Project",
+            //                     "Project created successfully!",
+            //                     "OK"
+            //                 );
 
-                            editedConfig.ApiKey = ok.ApiKey;
-                            SaveConfig(true);
-                            Repaint();
-                        },
-                        error =>
-                        {
-                            isDoingOperation = false;
-                            EditorUtility.DisplayDialog(
-                                "Create Project",
-                                $"Failed to create project: {error.Message}",
-                                "OK"
-                            );
-                            Repaint();
-                        }
-                    );
-                }
-            }
+            //                 editedConfig.ApiKey = ok.ApiKey;
+            //                 SaveConfig(true);
+            //                 Repaint();
+            //             },
+            //             error =>
+            //             {
+            //                 isDoingOperation = false;
+            //                 EditorUtility.DisplayDialog(
+            //                     "Create Project",
+            //                     $"Failed to create project: {error.Message}",
+            //                     "OK"
+            //                 );
+            //                 Repaint();
+            //             }
+            //         );
+            //     }
+            // }
 
             EditorGUILayout.EndVertical();
 
